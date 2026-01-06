@@ -2,6 +2,8 @@ albucore==0.0.24
 albumentations==2.0.8
 annotated-types==0.7.0
 anyio==4.12.0
+boto3==1.42.22
+botocore==1.42.22
 certifi==2026.1.4
 charset-normalizer==3.4.4
 click==8.3.1
@@ -20,6 +22,7 @@ httpx==0.28.1
 huggingface_hub==1.2.3
 idna==3.11
 Jinja2==3.1.6
+jmespath==1.0.1
 kiwisolver==1.4.9
 MarkupSafe==3.0.3
 matplotlib==3.10.8
@@ -41,6 +44,7 @@ python-dateutil==2.9.0.post0
 pytz==2025.2
 PyYAML==6.0.3
 requests==2.32.5
+s3transfer==0.16.0
 scipy==1.15.3
 seaborn==0.13.2
 shellingham==1.5.4
