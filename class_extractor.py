@@ -94,15 +94,15 @@ class LayoutClassExtractor:
 
         doc.close()
         self.cleanup()
-        self.save_json()
+        # self.save_json()
         return self.class_texts
 
-    def save_json(self):
-        output_file = os.path.join(self.out_path, "extracted_classes.json")
-        with open(output_file, "w", encoding="utf-8") as f:
-            json.dump(self.class_texts, f, indent=2, ensure_ascii=False)
+    # def save_json(self):
+    #     output_file = os.path.join(self.out_path, "extracted_classes.json")
+    #     with open(output_file, "w", encoding="utf-8") as f:
+    #         json.dump(self.class_texts, f, indent=2, ensure_ascii=False)
 
-        print(f"✅ Saved: {output_file}")
+    #     print(f"✅ Saved: {output_file}")
 
     def cleanup(self):
         for f in os.listdir("temp"):
