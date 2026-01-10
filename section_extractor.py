@@ -205,6 +205,33 @@ def fetch_pdf_from_s3(pdf_url: str, aws_access_key: str, aws_secret_key: str) ->
     response = s3.get_object(Bucket=bucket_name, Key=key)
     return response["Body"].read()
 
+def load_local_pdf(pdf_path: str) -> bytes:
+    with open(pdf_path, "rb") as f:
+        return f.read()
+
+def test_local_resume(pdf_path: str, dpi=300, conf=0.15):
+    print("🧪 Running local resume test")
+    print(f"📄 File: {pdf_path}")
+
+    pdf_bytes = load_local_pdf(pdf_path)
+
+    extractor = LayoutClassExtractor(
+        pdf_bytes=pdf_bytes,
+        dpi=dpi,
+        conf=conf
+    )
+
+    results = extractor.extract()
+
+    # Save output locally (non-Lambda)
+    with open("resume_outputs.json", "w") as f:
+        json.dump(results, f, indent=2)
+
+    print("✅ Test completed")
+    print("📦 Output saved as resume_outputs.json")
+
+    return results
+
 
 # =========================
 # Lambda handler
@@ -264,3 +291,13 @@ def handler(event, context):
 
     finally:
         print(f"⌚ Time taken: {time.time() - start_time:.2f} seconds")
+
+if __name__ == "__main__":
+    # Change path to your local resume PDF
+    LOCAL_PDF_PATH = "Ujjwal Tyagi.pdf"
+
+    test_local_resume(
+        pdf_path=LOCAL_PDF_PATH,
+        dpi=300,
+        conf=0.15
+    )
