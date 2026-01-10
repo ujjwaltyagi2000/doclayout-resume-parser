@@ -12,6 +12,8 @@ import uuid
 # Global model (loaded once per container)
 # =========================
 MODEL_PATH = "doclayout_yolo_doclaynet_imgsz1120_docsynth_pretrain.pt"
+IS_LAMBDA = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
+DEFAULT_OUTPUT_DIR = "/tmp" if IS_LAMBDA else os.getcwd()
 MODEL = YOLOv10(MODEL_PATH)
 CLASS_NAMES = MODEL.names
 
@@ -167,7 +169,8 @@ class LayoutClassExtractor:
             sections[current_section][class_key].append(block["text"])
 
         # Step 5: save output
-        output_path = "resume_outputs.json"
+        # output_path = "resume_outputs.json"
+        output_path = os.path.join(DEFAULT_OUTPUT_DIR, "resume_outputs.json")
         with open(output_path, "w") as f:
             json.dump(sections, f, indent=2)
 
