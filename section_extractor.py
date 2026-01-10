@@ -267,6 +267,8 @@ def handler(event, context):
 
         print("✅ Extraction completed")
 
+        print(f"📋 Results: \n{results}")
+
         return {
             "statusCode": 200,
             "headers": {
