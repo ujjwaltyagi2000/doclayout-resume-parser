@@ -56,7 +56,7 @@ class LayoutClassExtractor:
             self._normalize(h) for h in sub_headings
         }
         print(f"🔎Sub Headings: {sub_headings}")
-        self.sub_headings = sub_headings
+        # self.sub_headings = sub_headings
 
         self.detected_blocks = []
         self.pages_info = self._pdf_to_images()
@@ -177,7 +177,7 @@ class LayoutClassExtractor:
 
         # Step 5: save output
         # output_path = "resume_outputs.json"
-        output_path = os.path.join(DEFAULT_OUTPUT_DIR, "resume_outputs.json")
+        output_path = os.path.join(DEFAULT_OUTPUT_DIR, "section_header.json")
         with open(output_path, "w") as f:
             json.dump(sections, f, indent=2)
 
@@ -354,7 +354,7 @@ def handler(event, context):
 
 if __name__ == "__main__":
     # Change path to your local resume PDF
-    LOCAL_PDF_PATH = "Puunita Chaturvedi.pdf"
+    LOCAL_PDF_PATH = "Ujjwal Tyagi.pdf"
 
     test_local_resume(
         pdf_path=LOCAL_PDF_PATH,
