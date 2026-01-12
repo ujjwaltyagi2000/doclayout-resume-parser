@@ -1,6 +1,8 @@
 from doclayout_yolo import YOLOv10
 from resuscan_getheadings import get_headings
 from urllib.parse import urlparse
+from collections import defaultdict
+# import json
 import boto3
 import fitz
 import json
@@ -53,6 +55,8 @@ class LayoutClassExtractor:
         self.sub_headings = {
             self._normalize(h) for h in sub_headings
         }
+        print(f"🔎Sub Headings: {sub_headings}")
+        self.sub_headings = sub_headings
 
         self.detected_blocks = []
         self.pages_info = self._pdf_to_images()
@@ -139,7 +143,10 @@ class LayoutClassExtractor:
         # Sort blocks top → bottom
         self.detected_blocks.sort(key=lambda x: (x["page"], x["y"]))
 
-        return self._build_sections()
+        # return self._build_sections()
+        sections = self._build_sections()
+        return self.build_final_output(sections)
+
 
     # =========================
     # Section builder
@@ -175,6 +182,54 @@ class LayoutClassExtractor:
             json.dump(sections, f, indent=2)
 
         return sections
+    
+    def _get_full_resume_text(self):
+        doc = fitz.open(stream=self.pdf_bytes, filetype="pdf")
+        lines = []
+
+        for page in doc:
+            text = page.get_text("text")
+            page_lines = [l.strip() for l in text.split("\n") if l.strip()]
+            lines.extend(page_lines)
+
+        doc.close()
+        return lines
+
+
+    from collections import defaultdict
+
+    def _build_class_wise_content(self):
+        classes = defaultdict(list)
+
+        for block in self.detected_blocks:
+            key = f"{block['class_id']} - {block['class_name']}"
+            classes[key].append(block["text"])
+
+        return dict(classes)
+
+    def build_final_output(self, sections):
+        final_output = {
+            "meta": {
+                "dpi": self.dpi,
+                "confidence": self.conf,
+                "total_pages": len(self.pages_info)
+            },
+
+            # 1️⃣ Sub-headings from get_headings
+            "sub_headings": sorted(set(self.sub_headings)),
+
+            # 2️⃣ Class-wise extracted content
+            "classes_and_content": self._build_class_wise_content(),
+
+            # 3️⃣ Sectioned content (your existing output)
+            "sections_by_header": sections,
+
+            # 4️⃣ Entire resume text line-by-line
+            "full_resume_text": self._get_full_resume_text()
+        }
+
+        return final_output
+
 
     # =========================
     # Cleanup
@@ -299,7 +354,7 @@ def handler(event, context):
 
 if __name__ == "__main__":
     # Change path to your local resume PDF
-    LOCAL_PDF_PATH = "Ujjwal Tyagi.pdf"
+    LOCAL_PDF_PATH = "Puunita Chaturvedi.pdf"
 
     test_local_resume(
         pdf_path=LOCAL_PDF_PATH,
