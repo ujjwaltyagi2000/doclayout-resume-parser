@@ -44,8 +44,7 @@ class LayoutClassExtractor:
         self.conf = conf
 
         # Lambda-safe temp dir
-        # self.temp_dir = os.path.join("/tmp", str(uuid.uuid4()))
-        self.temp_dir = os.path.join(os.getcwd(), "saved_cv_pages")
+        self.temp_dir = os.path.join("/tmp", str(uuid.uuid4()))
         os.makedirs(self.temp_dir, exist_ok=True)
 
         self.model = MODEL
@@ -143,7 +142,7 @@ class LayoutClassExtractor:
                     })
 
         doc.close()
-        # self._cleanup()
+        self._cleanup()
 
         # --- SMART SORTING FOR MULTI-COLUMN ---
         # 1. Sort by page first
