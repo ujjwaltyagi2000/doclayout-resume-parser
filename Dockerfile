@@ -29,4 +29,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 4. Copy code
 COPY . .
 
-CMD [ "section_extractor.handler" ]
+CMD [ "multi_column_section.handler" ]

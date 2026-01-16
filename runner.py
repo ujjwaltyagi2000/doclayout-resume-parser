@@ -1,6 +1,7 @@
 import json
-import class_extractor
+# import class_extractor
 # import section_extractor
+import multi_column_section
 
 # with open("payload/devops-engineer.json", encoding="utf-8") as f:
 with open("sample_input_payload.json", encoding="utf-8") as f:
@@ -8,5 +9,6 @@ with open("sample_input_payload.json", encoding="utf-8") as f:
     test_input = json.load(f)
 
 event = {"body": json.dumps(test_input)}
-class_extractor.handler(event, {})
+# class_extractor.handler(event, {})
 # section_extractor.handler(event, {})
+multi_column_section.handler(event, {})
