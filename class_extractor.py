@@ -1,3 +1,9 @@
+"""
+This module identifies all the classes and their corresponding texts in a PDF document.
+
+Status: Working ✅
+"""
+
 from doclayout_yolo import YOLOv10
 from urllib.parse import urlparse
 import boto3

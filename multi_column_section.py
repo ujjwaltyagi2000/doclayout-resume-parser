@@ -1,8 +1,20 @@
+"""
+Built over section_extractor.py. 
+
+This module: 
+    1. imports get_headings() function from resuscan_getheadings.py (resuscan code)
+    2. runs yolo over the document and maps extracted headings from get_headings() to their corresponding bounding boxes
+    3. builds sections from extracted headings by sorting the bounding boxes along x-axis, followed by y-axis
+    4. this enables multi-column resume parsing
+
+Status: Working ✅
+"""
+
 from doclayout_yolo import YOLOv10
 from resuscan_getheadings import get_headings
 from urllib.parse import urlparse
 from collections import defaultdict
-# import json
+
 import boto3
 import fitz
 import json
