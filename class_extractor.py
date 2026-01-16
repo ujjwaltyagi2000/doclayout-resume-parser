@@ -13,7 +13,9 @@ import uuid
 MODEL_PATH = "doclayout_yolo_doclaynet_imgsz1120_docsynth_pretrain.pt"
 MODEL = YOLOv10(MODEL_PATH)
 CLASS_NAMES = MODEL.names
-
+LOCAL_OUTPUT_DIR = "json"
+LOCAL_OUTPUT_JSON_FILE_NAME = "class_extrator_outputs.json"
+LOCAL_OUTPUT_FILE_PATH = os.path.join(LOCAL_OUTPUT_DIR, LOCAL_OUTPUT_JSON_FILE_NAME)
 
 # =========================
 # Layout extractor
@@ -188,3 +190,41 @@ def handler(event, context):
 
     finally:
         print(f"⌚ Time taken: {time.time() - start_time:.2f} seconds")
+
+def load_local_pdf(pdf_path: str) -> bytes:
+    with open(pdf_path, "rb") as f:
+        return f.read()
+
+def test_local_resume(pdf_path: str, dpi=300, conf=0.15):
+    print("🧪 Running local resume test")
+    print(f"📄 File: {pdf_path}")
+
+    pdf_bytes = load_local_pdf(pdf_path)
+
+    extractor = LayoutClassExtractor(
+        pdf_bytes=pdf_bytes,
+        dpi=dpi,
+        conf=conf
+    )
+
+    results = extractor.extract()
+
+    os.makedirs(LOCAL_OUTPUT_DIR, exist_ok=True)
+    # Save output locally (non-Lambda)
+    with open(LOCAL_OUTPUT_FILE_PATH, "w") as f:
+        json.dump(results, f, indent=2)
+
+    print("✅ Test completed")
+    print(f"📦 Output saved as {LOCAL_OUTPUT_FILE_PATH}")
+
+    return results
+
+if __name__ == "__main__":
+    
+    LOCAL_PDF_PATH = "TANVI GAWALI CV.pdf"
+
+    test_local_resume(
+        pdf_path=LOCAL_PDF_PATH,
+        dpi=300,
+        conf=0.15
+    )

@@ -16,6 +16,9 @@ import uuid
 MODEL_PATH = "doclayout_yolo_doclaynet_imgsz1120_docsynth_pretrain.pt"
 IS_LAMBDA = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
 DEFAULT_OUTPUT_DIR = "/tmp" if IS_LAMBDA else os.getcwd()
+LOCAL_OUTPUT_DIR = "json"
+LOCAL_OUTPUT_JSON_FILE_NAME = "section_extrator_outputs.json"
+LOCAL_OUTPUT_FILE_PATH = os.path.join(LOCAL_OUTPUT_DIR, LOCAL_OUTPUT_JSON_FILE_NAME)
 MODEL = YOLOv10(MODEL_PATH)
 CLASS_NAMES = MODEL.names
 
@@ -281,12 +284,13 @@ def test_local_resume(pdf_path: str, dpi=300, conf=0.15):
 
     results = extractor.extract()
 
+    os.makedirs(LOCAL_OUTPUT_DIR, exist_ok=True)
     # Save output locally (non-Lambda)
-    with open("resume_outputs.json", "w") as f:
+    with open(LOCAL_OUTPUT_FILE_PATH, "w") as f:
         json.dump(results, f, indent=2)
 
     print("✅ Test completed")
-    print("📦 Output saved as resume_outputs.json")
+    print(f"📦 Output saved as {LOCAL_OUTPUT_FILE_PATH}")
 
     return results
 
@@ -354,7 +358,7 @@ def handler(event, context):
 
 if __name__ == "__main__":
     # Change path to your local resume PDF
-    LOCAL_PDF_PATH = "Ujjwal Tyagi.pdf"
+    LOCAL_PDF_PATH = "TANVI GAWALI CV.pdf"
 
     test_local_resume(
         pdf_path=LOCAL_PDF_PATH,
