@@ -7,7 +7,7 @@ This module:
     3. extracts headings (class 7) from yolo output
     4. builds sections from extracted headings by sorting the bounding boxes along x-axis, followed by y-axis
     5. this enables multi-column resume parsing
-    6. within section headers, text is now in the same ordered (copouled with their class names) as in the original resume
+    6. within section headers, text is now in the same ordered (coupled with their class names) as in the original resume
 
 Status: Working ✅
 """
@@ -46,8 +46,8 @@ class LayoutClassExtractor:
         self.conf = conf
 
         # Lambda-safe temp dir
-        # self.temp_dir = os.path.join("/tmp", str(uuid.uuid4()))
-        self.temp_dir = os.path.join(os.getcwd(), "saved_cv_pages")
+        self.temp_dir = os.path.join("/tmp", str(uuid.uuid4()))
+        # self.temp_dir = os.path.join(os.getcwd(), "saved_cv_pages")
         os.makedirs(self.temp_dir, exist_ok=True)
 
         self.model = MODEL
@@ -145,7 +145,7 @@ class LayoutClassExtractor:
                     })
 
         doc.close()
-        # self._cleanup()
+        self._cleanup()
 
         # --- SMART SORTING FOR MULTI-COLUMN ---
         # 1. Sort by page first
@@ -169,30 +169,31 @@ class LayoutClassExtractor:
         for block in self.detected_blocks:
             normalized_text = self._normalize(block["text"])
 
-            # Step 2 & 3: detect headers (ignore list-items)
+            # Detect section header
             if (
                 block["class_id"] != 3 and
                 normalized_text in self.sub_headings
             ):
                 current_section = block["text"]
-                sections[current_section] = {}
+                sections[current_section] = []
                 continue
 
             if not current_section:
                 continue
 
-            class_key = f"class {block['class_id']}"
+            sections[current_section].append({
+                "class_id": block["class_id"],
+                "class_name": block["class_name"],
+                "text": block["text"]
+            })
 
-            sections[current_section].setdefault(class_key, [])
-            sections[current_section][class_key].append(block["text"])
-
-        # Step 5: save output
-        # output_path = "resume_outputs.json"
+        # Save for debugging
         output_path = os.path.join(DEFAULT_OUTPUT_DIR, "section_header.json")
         with open(output_path, "w") as f:
             json.dump(sections, f, indent=2)
 
         return sections
+
     
     def _get_full_resume_text(self):
         doc = fitz.open(stream=self.pdf_bytes, filetype="pdf")
@@ -413,6 +414,7 @@ def handler(event, context):
 if __name__ == "__main__":
     # Change path to your local resume PDF
     LOCAL_PDF_PATH = "TANVI GAWALI CV.pdf"
+    # LOCAL_PDF_PATH = "Ujjwal Tyagi.pdf"
 
     test_local_resume(
         pdf_path=LOCAL_PDF_PATH,
