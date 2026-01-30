@@ -29,4 +29,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 4. Copy code
 COPY . .
 
-CMD [ "multi_column_section.handler" ]
+CMD [ "ordered_classes_within_sections.handler" ]
