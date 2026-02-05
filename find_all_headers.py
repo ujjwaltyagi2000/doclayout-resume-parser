@@ -16,7 +16,7 @@ Status: In Progress 🚀
 """
 
 from doclayout_yolo import YOLOv10
-from resuscan_getheadings import get_headings
+from resuscan_fonts import get_headings, get_heading_font_sizes  # Added get_heading_font_sizes
 from urllib.parse import urlparse
 from collections import defaultdict
 
@@ -35,7 +35,7 @@ IS_LAMBDA = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
 DEFAULT_OUTPUT_DIR = "/tmp" if IS_LAMBDA else os.getcwd()
 MODEL = YOLOv10(MODEL_PATH)
 LOCAL_OUTPUT_DIR = "json"
-LOCAL_OUTPUT_JSON_FILE_NAME = "headers_and_fontsv2.json"
+LOCAL_OUTPUT_JSON_FILE_NAME = "test.json"
 LOCAL_OUTPUT_FILE_PATH = os.path.join(LOCAL_OUTPUT_DIR, LOCAL_OUTPUT_JSON_FILE_NAME)
 CLASS_NAMES = MODEL.names
 
@@ -70,14 +70,27 @@ class LayoutClassExtractor:
             _,
             _,
             _,
-            _
+            _,
+            word_to_size
         ) = get_headings(self.pdf_bytes)
 
         self.sub_headings = {
             self._normalize(h) for h in sub_headings
         }
+        self.word_to_size = word_to_size
+        
         print(f"🔎Sub Headings: {sub_headings}")
-        # self.sub_headings = sub_headings
+        
+        # Get the font sizes for headings
+        heading_font_map = get_heading_font_sizes(sub_headings, self.word_to_size)
+        print("📃 Heading font map:", heading_font_map)
+        
+        heading_font_sizes = list(set(heading_font_map.values()))
+        print("📃 Heading font sizes:", heading_font_sizes)
+        
+        # Store for later use
+        self.heading_font_map = heading_font_map
+        self.target_font_sizes = heading_font_sizes
 
         self.detected_blocks = []
         self.pages_info = self._pdf_to_images()
@@ -226,11 +239,17 @@ class LayoutClassExtractor:
     def _get_class_7_content(self):
         """
         Extract class 7 headers with their font sizes.
+        Only includes headers whose font sizes match the target_font_sizes from get_headings().
         Returns a dict where each header maps to its font size info.
-        
         """
         doc = fitz.open(stream=self.pdf_bytes, filetype="pdf")
         headers_with_fonts = {}
+        
+        print(f"\n🎯 Target font sizes for filtering: {self.target_font_sizes}")
+        print(f"🔍 Processing {sum(1 for b in self.detected_blocks if b['class_id'] == 7)} class 7 headers...\n")
+        
+        matched_count = 0
+        unmatched_count = 0
         
         for block in self.detected_blocks:
             if block["class_id"] == 7:
@@ -242,8 +261,8 @@ class LayoutClassExtractor:
                 rect = fitz.Rect(
                     block["x"],
                     block["y"],
-                    block.get("x1", block["x"]),  # Use stored x1 or approximate
-                    block.get("y1", block["y"])    # Use stored y1 or approximate
+                    block.get("x1", block["x"] + 100),  # Use stored x1 or approximate
+                    block.get("y1", block["y"] + 50)    # Use stored y1 or approximate
                 )
                 
                 # Extract text with font information using dict format
@@ -265,14 +284,31 @@ class LayoutClassExtractor:
                     if font_size:
                         break
                 
-                # Store with detailed info
-                headers_with_fonts[text] = {
-                    "font_size": font_size if font_size else None,
-                    "font_name": font_name if font_name else None,
-                    "page": page_idx + 1  # 1-indexed for readability
-                }
+                # Check if font size matches (round to nearest integer for comparison)
+                if font_size is not None:
+                    rounded_font_size = round(font_size)
+                    matches_target = rounded_font_size in self.target_font_sizes
+                    
+                    # Only include headers that match the target font sizes
+                    if matches_target:
+                        headers_with_fonts[text] = {
+                            "font_size": font_size,
+                            "font_size_rounded": rounded_font_size,
+                            "font_name": font_name if font_name else None,
+                            "page": page_idx + 1,  # 1-indexed for readability
+                            "matched_target": True
+                        }
+                        matched_count += 1
+                        print(f"✅ MATCHED: '{text}' | Font: {font_size} (rounded: {rounded_font_size}) | Page: {page_idx + 1}")
+                    else:
+                        unmatched_count += 1
+                        print(f"❌ SKIPPED: '{text}' | Font: {font_size} (rounded: {rounded_font_size}) | Page: {page_idx + 1} | Not in {self.target_font_sizes}")
+                else:
+                    unmatched_count += 1
+                    print(f"⚠️  NO FONT: '{text}' | Could not extract font size | Page: {page_idx + 1}")
         
         doc.close()
+        print(f"\n📊 SUMMARY: {matched_count} matched ✅ | {unmatched_count} skipped ❌ | {matched_count + unmatched_count} total\n")
         return headers_with_fonts
 
 
@@ -281,7 +317,9 @@ class LayoutClassExtractor:
             "meta": {
                 "dpi": self.dpi,
                 "confidence": self.conf,
-                "total_pages": len(self.pages_info)
+                "total_pages": len(self.pages_info),
+                "target_heading_font_sizes": self.target_font_sizes,  # Added
+                "heading_font_map": self.heading_font_map  # Added
             },
 
             "seperator1": """
@@ -301,7 +339,7 @@ class LayoutClassExtractor:
             # # 2️⃣ Class-wise extracted content
             # "classes_and_content": self._build_class_wise_content(),
 
-            # 2️⃣ YOLO detected section headers (class 7 only) WITH FONT SIZES
+            # 2️⃣ YOLO detected section headers (class 7 only) WITH FONT SIZES - FILTERED BY TARGET SIZES
             "section_headers_yolo": self._get_class_7_content(),
 
             "seperator3": """
@@ -450,8 +488,9 @@ def handler(event, context):
 
 if __name__ == "__main__":
     # Change path to your local resume PDF
-    LOCAL_PDF_PATH = "TANVI GAWALI CV.pdf"
+    # LOCAL_PDF_PATH = "TANVI GAWALI CV.pdf"
     # LOCAL_PDF_PATH = "Ujjwal Tyagi.pdf"
+    LOCAL_PDF_PATH = "Puunita Chaturvedi.pdf"
 
     test_local_resume(
         pdf_path=LOCAL_PDF_PATH,

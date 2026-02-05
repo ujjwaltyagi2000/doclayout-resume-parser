@@ -422,11 +422,17 @@ def get_headings(pdf_file):
         print("get_headings ",e)
         return [],[],[],[],[],[],[],[],[],[],[],{}
     
+def find_header_font_sizes(heading_font_map):
+
+    font_sizes = list(set(heading_font_map.values()))
+
+    return font_sizes
+
 if __name__ == "__main__":
 
     # pdf_file_path = "Puunita Chaturvedi.pdf"
-    # pdf_file_path = "Ujjwal Tyagi.pdf"
-    pdf_file_path = "TANVI GAWALI CV.pdf"
+    pdf_file_path = "Ujjwal Tyagi.pdf"
+    # pdf_file_path = "TANVI GAWALI CV.pdf"
     # pdf_file_path = "Megha resume.pdf"
     
     # Read the PDF file as bytes
@@ -444,3 +450,5 @@ if __name__ == "__main__":
     heading_font_sizes = get_heading_font_sizes(subHeadings, word_to_size)
 
     print("📃 Heading font sizes:", heading_font_sizes)
+
+    print(find_header_font_sizes(heading_font_sizes))
