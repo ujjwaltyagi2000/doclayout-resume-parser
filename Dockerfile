@@ -1,6 +1,6 @@
 FROM public.ecr.aws/lambda/python:3.10
 
-# 1. Install essential system libraries
+# 1️⃣ Install required system libraries for Docling / PyMuPDF
 RUN yum install -y \
     gcc \
     gcc-c++ \
@@ -11,22 +11,17 @@ RUN yum install -y \
     gzip \
     && yum clean all
 
-# 2. Copy requirements
+# 2️⃣ Copy requirements first (for Docker layer caching)
 COPY requirements.txt .
 
-# 3. Install Python dependencies
+# 3️⃣ Upgrade pip
 RUN pip install --no-cache-dir --upgrade pip
 
-# Install Torch CPU first (the heaviest part)
-RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
+# 4️⃣ Install dependencies
+RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
 
-# Install PyMuPDF forcing the binary (prefer-binary flag is key here)
-RUN pip install --no-cache-dir --prefer-binary PyMuPDF==1.24.10
-
-# Install the rest
-RUN pip install --no-cache-dir -r requirements.txt
-
-# 4. Copy code
+# 5️⃣ Copy application code
 COPY . .
 
-CMD [ "ordered_classes_within_sections.handler" ]
+# 6️⃣ Lambda handler
+CMD ["docling_groq.handler"]
