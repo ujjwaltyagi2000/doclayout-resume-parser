@@ -39,7 +39,6 @@ def get_headers_from_pdf_bytes(pdf_bytes: bytes):
     with open(temp_path, "wb") as f:
         f.write(pdf_bytes)
 
-    converter = DocumentConverter()
     result = converter.convert(temp_path)
     doc = result.document
 
@@ -49,8 +48,17 @@ def get_headers_from_pdf_bytes(pdf_bytes: bytes):
         label = item.label.value if hasattr(item.label, 'value') else str(item.label)
         text = item.text.strip() if hasattr(item, 'text') else ""
 
+        size = 0
+        if hasattr(item, 'prov') and item.prov:
+            bbox = item.prov[0].bbox
+            size = round(bbox.t - bbox.b, 2)
+
         if label == "section_header" and text:
-            headers.append(text)
+            headers.append({
+                "text": text,
+                "level": level,
+                "font_size": size
+            })
 
     print("\n🔎 Extracted Headers:")
     print(headers)
@@ -66,8 +74,13 @@ def filter_headers_with_groq(headers):
     prompt = f"""
     Extract valid resume section headers from this list: {headers}
 
+    Each List Item contains three fields: 
+    1. Header Text
+    2. Header Level (within document Hierarchy)
+    3. Font Size
+
     Rules:
-    - Keep only standard resume sections (e.g., Education, Experience, Skills, Summary)
+    - Keep only standard resume sections (e.g., Education, Experience, Skills, Projects, etc.)
     - Remove names, dates, company names, and project details
     - Remove duplicates
     - Return ONLY a Python list, nothing else
@@ -123,8 +136,17 @@ def get_headers_from_pdf_path(pdf_path: str):
         label = item.label.value if hasattr(item.label, 'value') else str(item.label)
         text = item.text.strip() if hasattr(item, 'text') else ""
 
+        size = 0
+        if hasattr(item, 'prov') and item.prov:
+            bbox = item.prov[0].bbox
+            size = round(bbox.t - bbox.b, 2)
+
         if label == "section_header" and text:
-            headers.append(text)
+            headers.append({
+                "text": text,
+                "level": level,
+                "font_size": size
+            })
 
     print("\n🔎 Extracted Headers:")
     print(headers)

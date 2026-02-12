@@ -8,8 +8,6 @@ Status: Working ✅
 
 from docling.document_converter import DocumentConverter
 
-headers = []
-
 # source = r"resume.pdf"
 source = r"Ujjwal Tyagi Resume Jan.pdf"
 converter = DocumentConverter()
@@ -32,14 +30,9 @@ for item, level in doc.iterate_items():
     if label == "section_header":
         # We print the size here to see the difference between H1, H2, etc.
         print(f"\n[HEADING L{level}] (Size: {size}): {text.upper()}")
-        headers.append((level,size,text.upper()))
-    #     print("=" * 40)
-    # elif label == "list_item":
-    #     print(f"  • {text} (Size: {size})")
-    # else:
-    #     # For general text, size helps identify bold/small print
-    #     print(f"[{label.upper()} - Size {size}]: {text}")
-
-print("\n🔎 Extracted Headers:")
-for header in headers:
-    print(header)
+        print("=" * 40)
+    elif label == "list_item":
+        print(f"  • {text} (Size: {size})")
+    else:
+        # For general text, size helps identify bold/small print
+        print(f"[{label.upper()} - Size {size}]: {text}")
