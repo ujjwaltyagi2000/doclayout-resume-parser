@@ -514,7 +514,7 @@ def filter_body_content(pdf_file):
             line_text = ' '.join(words)
             result.append({
                 'text': line_text,
-                'font_size': font_size,
+                'font': font_size,
                 'y_position': y_coord
             })
         
