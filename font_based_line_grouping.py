@@ -239,195 +239,6 @@ def standard_headingsMatch(word_list):
                 standard_match =[]
                 return standard_match,len(standard_match)
 
-def get_heading_font_sizes(headings, word_to_size):
-    heading_font_sizes = {}
-
-    for heading in headings:
-        parts = heading.split()
-        sizes = []
-
-        for part in parts:
-            for word, font_sizes in word_to_size.items():
-                if word.lower() == part.lower():
-                    sizes.extend(font_sizes)
-
-        if sizes:
-            heading_font_sizes[heading] = max(sizes)
-
-    return heading_font_sizes
-
-def get_headings(pdf_file):
-    # scrape and divivde all the words into groups
-    try: 
-        print("✅ Inside get_headings function")
-        word_to_size = {}
-        size_to_word = {}
-
-
-        for page_layout in extract_pages(BytesIO(pdf_file)):
-
-            for element in page_layout:
-                if isinstance(element, LTTextContainer):
-                    for text_object in element:
-                        if isinstance(text_object, (LTChar, LTAnno)):
-                            continue  # Skip individual characters and annotations
-                        font_size = None
-                        current_word = ''
-                        for character in text_object:
-                            if isinstance(character, LTChar):
-                                if font_size is None:
-                                    font_size = round(character.size)
-                                if character.get_text().isspace():
-                                    # End of word
-                                    if current_word:
-                                        if current_word not in word_to_size:
-                                            word_to_size[current_word] = [font_size]
-                                        else:
-                                            word_to_size[current_word].append(font_size)
-                                        if font_size not in size_to_word:
-                                            size_to_word[font_size] = [current_word]
-                                        else:
-                                            size_to_word[font_size].append(current_word)
-                                    current_word = ''
-                                    font_size = None
-                                else:
-                                    current_word += character.get_text()
-                                    font_size = round(character.size)
-                        # Check if there is a last word
-                        if current_word:
-                            if current_word not in word_to_size:
-                                word_to_size[current_word] = [font_size]
-                            else:
-                                word_to_size[current_word].append(font_size)
-                            if font_size not in size_to_word:
-                                size_to_word[font_size] = [current_word]
-                            else:
-                                size_to_word[font_size].append(current_word)
-        # print("📃 Word to Size: \n")
-        # print(word_to_size)
-        # print("\n📃 Size to Word: \n")
-        # print(size_to_word)
-        max_size = None
-        max_words = []
-        other_sizes = {}
-
-        for size, words in size_to_word.items():
-            print(f"✅ Size: {size}, Words: {len(words)}")
-            if max_size is None or len(words) > len(max_words):
-                max_size = size
-                max_words = words
-        
-        # print(f"📃 Max Size: {max_size}, \n\nMax Words: {len(max_words)}")
-
-
-        for size, words in size_to_word.items():
-            if size != max_size:
-                other_sizes[size] = words
-
-        # print(f"📃 Other Sizes: {other_sizes}")
-    
-        words_to_check=[]
-        for words in other_sizes.values():
-            words_to_check.append(words)
-
-        # print(f"📃 Words to Check: {words_to_check}")
-
-        words_to_check_flat = [word for sublist in words_to_check for word in sublist]
-        # print(f"📃 Words to Check Flat: {words_to_check_flat}")
-        total_words = [word for words in size_to_word.values() for word in words]
-        # print(f"📃 Total Words: {total_words}")
-    
-
-            
-        with pdfplumber.open(BytesIO(pdf_file)) as pdf:
-            word_array = []
-            for page in pdf.pages:
-                clean_text = page.filter(lambda obj: not (obj["object_type"] == "char" and "Bold" in obj["fontname"]))
-                words = clean_text.extract_text().split()
-                for word in words:
-                    if all(ord(c) < 128 for c in word):
-                        word_array.append(word)
-        
-
-        # print(f"📃 word array: {word_array}")
-
-        #getting uppercase words
-        # Open PDF file
-        with pdfplumber.open(BytesIO(pdf_file)) as pdf:
-            
-            # Initialize list to store uppercase words
-            uppercase_words = []
-            
-            
-            # Iterate through each page of the PDF
-            for page in pdf.pages:
-                
-                # Extract text from page and split into words
-                text = page.extract_text()
-                
-                
-                # Loop through each word and check if it is uppercase
-                for word in text.split():
-                    if word.isupper() or (word[0].isupper() and "&" in word):
-                        uppercase_words.append(word)
-                    if word=='&':
-                        uppercase_words.append(word)
-    
-
-        headings_four=extract_headings_two(words_to_check_flat)
-
-        if(len(headings_four)==0):
-
-            print("📃 headings four is empty")
-            
-            word_array.extend(uppercase_words)
-            headings_three = extract_headings_two(word_array)
-            # headings_two = extract_headings_two(uppercase_words)
-        
-            # headings_two = {word.lower() for word in headings_two}
-            # headings_three = {word.lower() for word in headings_three}
-        
-            
-            # common_words = headings_three.intersection(headings_two)
-        
-            # all_words = list((headings_three - common_words) | (headings_two - common_words) | common_words)
-        
-
-            if(len(headings_three)==0):
-
-                print("📃 headings three is empty")
-                headings_all = extract_headings_two(total_words)
-            
-            
-                categories_list,nr,wp,es,oth,oth_db,section_map,section_map_count=matchCategories(headings_all)
-                
-                standard_match , standard_match_count = standard_headingsMatch(headings_all)
-                return list(categories_list),list(headings_all),list(nr),list(wp),list(es),list(oth),list(oth_db),section_map,section_map_count,standard_match,standard_match_count, word_to_size
-            else:
-                print("📃 headings three is not empty")
-                # print("at uppercase & bold ---->")
-                categories_list,nr,wp,es,oth,oth_db,section_map,section_map_count=matchCategories(headings_three)
-                
-                standard_match , standard_match_count = standard_headingsMatch(headings_three)
-                return list(categories_list),list(headings_three),list(nr),list(wp),list(es),list(oth),list(oth_db),section_map,section_map_count,standard_match,standard_match_count, word_to_size
-        else:
-            
-            print("📃 headings four is not empty")
-            # print("at uppercase & bold ---->")
-            categories_list,nr,wp,es,oth,oth_db,section_map,section_map_count=matchCategories(headings_four)
-            
-            standard_match , standard_match_count = standard_headingsMatch(headings_four)
-            return list(categories_list),list(headings_four),list(nr),list(wp),list(es),list(oth),list(oth_db),section_map,section_map_count,standard_match , standard_match_count, word_to_size
-    except Exception as e:
-        print("get_headings ",e)
-        return [],[],[],[],[],[],[],[],[],[],[],{}
-
-def find_header_font_sizes(heading_font_map):
-
-    font_sizes = list(set(heading_font_map.values()))
-
-    return font_sizes
-
 def filter_body_content(pdf_file):
     try: 
         word_to_size = {}
@@ -487,7 +298,9 @@ def filter_body_content(pdf_file):
         # Find the body font size (most common)
         max_size = None
         max_words = []
+        font_and_words = []
         for size, words in size_to_word.items():
+            font_and_words.append({"size":size, "words": len(words)})
             print(f"🚀 Size: {size}, Words: {len(words)}")
             if max_size is None or len(words) > len(max_words):
                 max_size = size
@@ -518,7 +331,7 @@ def filter_body_content(pdf_file):
                 'y_position': y_coord
             })
         
-        return result
+        return result, font_and_words, max_size, len(max_words)
 
     except Exception as e:
         print(f"❌ Error in filter_body_content: {e}")
@@ -536,19 +349,6 @@ if __name__ == "__main__":
     with open(pdf_file_path, 'rb') as f:
         pdf_file = f.read()
 
-    # headings, subHeadings, notRequired_Heading, Work_Project_Headings, EduSkill_Headings, Other_Headings, Other_headings_db, sectionMap, sectionMapCount, standard_match_headings, standard_match_headings_count, word_to_size = get_headings(pdf_file)
-
-    # print(headings, subHeadings, notRequired_Heading, Work_Project_Headings, EduSkill_Headings, Other_Headings, Other_headings_db, sectionMap, sectionMapCount, standard_match_headings, standard_match_headings_count)
-
-    # printing all values separately:
-    # print("🔍 get_headings() outputs: ")
-    # print(f"\nHeadings: {headings}, \nSub Headings: {subHeadings}, \nNot Required heading: {notRequired_Heading}, \nWork Project Headings: {Work_Project_Headings}\n\n")
-
-    # heading_font_sizes = get_heading_font_sizes(subHeadings, word_to_size)
-
-    # print("📃 Heading with font sizes:", heading_font_sizes)
-
-    # print(f"📃 Font Sizes of Headers only: {find_header_font_sizes(heading_font_sizes)}")
     lines = filter_body_content(pdf_file)
     
     # Print line by line
