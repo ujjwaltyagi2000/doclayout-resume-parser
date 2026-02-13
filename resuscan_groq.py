@@ -18,32 +18,13 @@ if os.getenv("AWS_LAMBDA_FUNCTION_NAME") is None:
 
 client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
+def filter_headers_with_groq(headers, prompt_template):
 
-def filter_headers_with_groq(headers):
-
-    prompt = f"""
-    Extract valid resume section headers from this list: {headers}
-
-    Each List Item contains three fields: 
-    1. Header Text
-    3. Font Size
-    2. Y co-ordinate (within document)
-
-    Rules:
-    - Keep only standard resume sections (e.g., Education, Experience, Skills, Projects, etc.)
-    - Remove names, dates, company names, and project details
-    - Remove duplicates
-    - Return ONLY a Python list, nothing else
-
-    IMPORTANT: Your entire response must be ONLY the list in this exact format:
-    ['Header1', 'Header2', 'Header3']
-
-    Do not include explanations, code, markdown, or any other text.
-    """
-
+    # Inject headers into the prompt template
+    prompt = prompt_template.format(headers=headers)
 
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant", 
+        model="llama-3.1-8b-instant",
         messages=[
             {"role": "user", "content": prompt}
         ],
@@ -53,6 +34,7 @@ def filter_headers_with_groq(headers):
     cleaned_headers = response.choices[0].message.content
 
     return cleaned_headers
+
 
 def fetch_pdf_from_s3(pdf_url: str, aws_access_key: str, aws_secret_key: str) -> bytes:
     parsed_url = urlparse(pdf_url)
@@ -86,7 +68,7 @@ def handler(event, context):
         aws_access_key = req_body["aws_access_key"]
         aws_secret_key = req_body["aws_secret_key"]
         pdf_url = req_body["pdf_url"]
-
+        prompt = req_body["prompt"]
 
         pdf_bytes = fetch_pdf_from_s3(
             pdf_url,
@@ -98,7 +80,7 @@ def handler(event, context):
 
         # print(f"✅ Body Font Size: {max_size}, Words: {len(max_words)}")
 
-        cleaned_headers = filter_headers_with_groq(linewise_content_with_fonts)
+        cleaned_headers = filter_headers_with_groq(linewise_content_with_fonts, prompt)
 
 
         # headers = get_headers_from_pdf_bytes(pdf_bytes)
