@@ -212,11 +212,15 @@ def handler(event, context):
             "seperator5": "\n\n-------------------------------------------------------------------------------------------------------------------------------------------\n\n",
             "Groq Token Usage": token_usage,
             "seperator6": "\n\n-------------------------------------------------------------------------------------------------------------------------------------------\n\n",
-            # "YOLO Detected Blocks": yolo_blocks,
-            "YOLO Detected Blocks": "\n".join(yolo_blocks),
-            "seperator7": "\n\n-------------------------------------------------------------------------------------------------------------------------------------------\n\n",
-            # "Original Text Line by Line": original_lines
-            "Original Text Line by Line": "\n".join(original_lines)
+            "YOLO Detected Blocks": [
+                {"line_number": i + 1, "text": text}
+                for i, text in enumerate(yolo_blocks)
+            ],
+
+            "Original Text Line by Line": [
+                {"line_number": i + 1, "text": text}
+                for i, text in enumerate(original_lines)
+            ],
         }
 
         print("✅ Extraction completed")
