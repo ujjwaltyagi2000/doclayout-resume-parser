@@ -17,6 +17,7 @@ Status: Working ✅
 from doclayout_yolo import YOLOv10
 # from resuscan_fonts import get_headings, get_heading_font_sizes  # Added get_heading_font_sizes
 from resuscan_groq import filter_body_content, filter_headers_with_groq
+from action_words import get_action_words, pdfText
 from urllib.parse import urlparse
 from collections import defaultdict
 
@@ -24,8 +25,9 @@ import boto3
 import fitz
 import json
 import time
-import os
 import uuid
+import ast
+import os
 
 # =========================
 # Global model (loaded once per container)
@@ -92,7 +94,6 @@ class LayoutClassExtractor:
             prompt
         )
 
-        import ast
 
         if isinstance(cleaned_headers, str):
             cleaned_headers = ast.literal_eval(cleaned_headers)
@@ -240,6 +241,13 @@ class LayoutClassExtractor:
         doc.close()
         return lines
 
+    def return_action_words(self):
+
+        text = pdfText(self.pdf_bytes)
+        actionwordsSet,actionwords_total,actionwords, len_action_words_set= get_action_words(text)
+        print(f"🎬 Action words: {actionwordsSet}")
+        return actionwordsSet
+
 
     def _build_class_wise_content(self):
         classes = defaultdict(list)
@@ -253,7 +261,7 @@ class LayoutClassExtractor:
 
     def build_final_output(self, sections):
         final_output = {
-            "meta": {
+            "META": {
                 "dpi": self.dpi,
                 "confidence": self.conf,
                 "total_pages": len(self.pages_info),
@@ -265,7 +273,7 @@ class LayoutClassExtractor:
 
     """,
 
-            "sub_headings": sorted(set(self.sub_headings)),
+            "GROQ HEADINGS": sorted(set(self.sub_headings)),
 
             "seperator2": """
 
@@ -273,7 +281,7 @@ class LayoutClassExtractor:
 
     """,
 
-            "sections_by_header": sections,
+            "SECTIONS BY HEADERS": sections,
 
             "seperator3": """
 
@@ -281,7 +289,14 @@ class LayoutClassExtractor:
 
     """,
 
-            "full_resume_text": self._get_full_resume_text()
+            "ACTION WORDS": self.return_action_words(),
+
+            "seperator4": """
+
+    --------------------------------------------------------------------------------------------------------------------
+
+    """,
+            "FULL RESUME TEXT": self._get_full_resume_text(),
         }
 
         return final_output
@@ -424,7 +439,6 @@ if __name__ == "__main__":
 
     test_local_resume(
         pdf_path=LOCAL_PDF_PATH,
-        prompt=prompt_template,
         dpi=300,
         conf=0.15
     )
