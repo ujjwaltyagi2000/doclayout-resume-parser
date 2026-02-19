@@ -4,6 +4,8 @@ import pandas as pd
 
 from io import BytesIO
 
+nltk.data.path.append("nltk_data")
+
 def pdfText(pdf_bytes):
     """
     Extracts text from a PDF using PyMuPDF (fitz).
@@ -73,7 +75,7 @@ def get_action_words(text):
         return list(actionwordsSet),actionwords_total,list(actionwords), len(actionwordsSet)
     except Exception as e:
         print("get_action_words ",e) 
-        return [],0,[]
+        return [],0,[], 0
     
 if __name__ == "__main__":
 
