@@ -39,11 +39,32 @@ LOCAL_OUTPUT_JSON_FILE_NAME = "test.json"
 LOCAL_OUTPUT_FILE_PATH = os.path.join(LOCAL_OUTPUT_DIR, LOCAL_OUTPUT_JSON_FILE_NAME)
 CLASS_NAMES = MODEL.names
 
+# Prompt for local testing:
+prompt_template = """
+    Extract valid resume section headers from this list: {headers}
+
+    Each List Item contains three fields: 
+    1. Header Text
+    3. Font Size
+    2. Y co-ordinate (within document)
+
+    Rules:
+    - Keep only standard resume sections (e.g., Education, Experience, Skills, Projects, etc.)
+    - Remove names, dates, company names, and project details
+    - Remove duplicates
+    - Return ONLY a Python list, nothing else
+
+    IMPORTANT: Your entire response must be ONLY the list in this exact format:
+    ['Header1', 'Header2', 'Header3']
+
+    Do not include explanations, code, markdown, or any other text.
+    """
+
 # =========================
 # Layout extractor
 # =========================
 class LayoutClassExtractor:
-    def __init__(self, pdf_bytes, dpi=300, conf=0.15):
+    def __init__(self, pdf_bytes, prompt, dpi=300, conf=0.15):
         # -------------------------
         # Step 1: Get headings via Groq (LLM filtering)
         # -------------------------
@@ -54,6 +75,7 @@ class LayoutClassExtractor:
         self.pdf_bytes = pdf_bytes
         self.dpi = dpi
         self.conf = conf
+        self.prompt = prompt
 
         self.model = MODEL
         self.class_names = CLASS_NAMES
@@ -63,32 +85,11 @@ class LayoutClassExtractor:
         linewise_content_with_fonts, font_and_words, max_font_size, max_words = filter_body_content(pdf_bytes)
             # filter_body_content(self.pdf_bytes)
 
-
-        prompt_template = """
-        Extract valid resume section headers from this list: {headers}
-
-        Each List Item contains three fields: 
-        1. Header Text
-        3. Font Size
-        2. Y co-ordinate (within document)
-
-        Rules:
-        - Keep only standard resume sections (e.g., Education, Experience, Skills, Projects, etc.)
-        - Remove names, dates, company names, and project details
-        - Remove duplicates
-        - Return ONLY a Python list, nothing else
-
-        IMPORTANT: Your entire response must be ONLY the list in this exact format:
-        ['Header1', 'Header2', 'Header3']
-
-        Do not include explanations, code, markdown, or any other text.
-        """
-
         # print(f"📃 LIKEWISE CONTENT WITH FONTS: \n{linewise_content_with_fonts}\n")
 
         cleaned_headers = filter_headers_with_groq(
             linewise_content_with_fonts,
-            prompt_template
+            prompt
         )
 
         import ast
@@ -331,6 +332,7 @@ def test_local_resume(pdf_path: str, dpi=300, conf=0.15):
 
     extractor = LayoutClassExtractor(
         pdf_bytes=pdf_bytes,
+        prompt=prompt_template,
         dpi=dpi,
         conf=conf
     )
@@ -368,6 +370,7 @@ def handler(event, context):
 
         confidence_threshold = req_body.get("confidence_threshold", 0.15)
         dpi = req_body.get("dpi", 300)
+        prompt = req_body["prompt"]
 
         pdf_bytes = fetch_pdf_from_s3(
             pdf_url,
@@ -377,8 +380,9 @@ def handler(event, context):
 
         extractor = LayoutClassExtractor(
             pdf_bytes=pdf_bytes,
+            prompt = prompt,
             conf=confidence_threshold,
-            dpi=dpi,
+            dpi=dpi
         )
 
         results = extractor.extract()
