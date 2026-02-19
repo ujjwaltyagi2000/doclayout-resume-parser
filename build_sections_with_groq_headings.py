@@ -370,7 +370,7 @@ def handler(event, context):
 
         confidence_threshold = req_body.get("confidence_threshold", 0.15)
         dpi = req_body.get("dpi", 300)
-        prompt = req_body["prompt"]
+        prompt = req_body.get("prompt", prompt_template)
 
         pdf_bytes = fetch_pdf_from_s3(
             pdf_url,
@@ -424,6 +424,7 @@ if __name__ == "__main__":
 
     test_local_resume(
         pdf_path=LOCAL_PDF_PATH,
+        prompt=prompt_template,
         dpi=300,
         conf=0.15
     )
