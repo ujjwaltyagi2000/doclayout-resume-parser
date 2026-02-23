@@ -35,6 +35,22 @@ def filter_headers_with_groq(headers, prompt_template):
 
     return cleaned_headers
 
+def get_standard_headings_map(cleaned_headers, prompt_template):
+
+    # Inject headers into the prompt template
+    prompt = prompt_template.format(cleaned_headers=cleaned_headers)
+
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0
+    )
+
+    standard_headings_map = response.choices[0].message.content
+
+    return standard_headings_map
 
 def fetch_pdf_from_s3(pdf_url: str, aws_access_key: str, aws_secret_key: str) -> bytes:
     parsed_url = urlparse(pdf_url)
@@ -68,7 +84,8 @@ def handler(event, context):
         aws_access_key = req_body["aws_access_key"]
         aws_secret_key = req_body["aws_secret_key"]
         pdf_url = req_body["pdf_url"]
-        prompt = req_body["prompt"]
+        cleaned_headers_prompt = req_body["prompt"]
+        standard_headings_prompt = req_body["shPrompt"]
 
         pdf_bytes = fetch_pdf_from_s3(
             pdf_url,
@@ -80,9 +97,12 @@ def handler(event, context):
 
         # print(f"✅ Body Font Size: {max_size}, Words: {len(max_words)}")
 
-        cleaned_headers = filter_headers_with_groq(linewise_content_with_fonts, prompt)
+        cleaned_headers = filter_headers_with_groq(linewise_content_with_fonts, cleaned_headers_prompt)
 
+        print(f"📃 Cleaned Headers: {cleaned_headers}")
 
+        standard_headings_map = get_standard_headings_map(cleaned_headers, standard_headings_prompt)
+        print(f"📃 Standard Headers: {standard_headings_map}")
         # headers = get_headers_from_pdf_bytes(pdf_bytes)
 
 
@@ -119,7 +139,15 @@ def handler(event, context):
 
 
 """,
-            "Cleaned headers from Groq": cleaned_headers
+            "Cleaned headers from Groq": cleaned_headers,
+            "seperator5": """
+
+            
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+
+""",
+            "Standard headings map from Groq": standard_headings_map
         }
 
         print("✅ Extraction completed")
@@ -158,10 +186,11 @@ if __name__ == "__main__":
     # pdf_file_path = "Ujjwal Tyagi.pdf"
     # pdf_file_path = "TANVI GAWALI CV.pdf"
     # pdf_file_path = "Megha resume.pdf"
-    
-    pdf_file = load_local_pdf(pdf_file_path)
 
-    lines = filter_body_content(pdf_file)
+    print(f"📁 File Name: {pdf_file_path}")
+    pdf_file = load_local_pdf(pdf_file_path)
+    
+    linewise_content_with_fonts, font_and_words, max_font_size, max_words = filter_body_content(pdf_file)
     
     # Print line by line
     # print(lines)
@@ -172,13 +201,74 @@ if __name__ == "__main__":
     #     for item in lines
     # ]
 
-    filtered_resume_text = lines
+    # 🚀 Prompt for getting clean headers
+    cleaned_headers_prompt_template = """
+        You are a resume expert. 
+        Extract valid resume section headers from this list: {headers}
 
-    print(filtered_resume_text)
+        Each List Item contains three fields: 
+        1. Header Text
+        3. Font Size
+        2. Y co-ordinate (within document)
 
+        Rules:
+        - Keep only standard resume sections (e.g., Education, Experience, Skills, Projects, etc.)
+        - Remove names, dates, company names, and project details
+        - Remove duplicates
+        - Return ONLY a Python list, nothing else
+        - If there are no valid headers, return an empty list
 
-    # Feeding filtered text to Llama
-    cleaned_headers = filter_headers_with_groq(filtered_resume_text)
-    
+        IMPORTANT: Your entire response must be ONLY the list in this exact format:
+        ['Header1', 'Header2', 'Header3']
+
+        Do not include explanations, code, markdown, or any other text.
+    """
+
+    print(f"📃 Unfiltered Headers: {linewise_content_with_fonts}")
+    # Feed extracted content to Groq
+    cleaned_headers = filter_headers_with_groq(
+        linewise_content_with_fonts,
+        cleaned_headers_prompt_template
+    )
+
     print("\n✅ Cleaned Resume Headers from LLaMA:")
     print(cleaned_headers)
+
+    # ✅ More precise prompt
+    standard_headings_prompt = f"""
+
+    You are a resume expert. I will provide you with a set of headers that are extracted from a resume.
+
+    Here are the extracted headers: {cleaned_headers}
+    
+    There are multiple ways to write the same thing. Example: Professional Experience, Work Experience, Work history, all can be called "Experience".
+
+    Here is a list of Standard Headers: ["Objective", "Summary", "Experience", "Projects"]  
+    
+    I want you map the extract headers to the Standard Headers as key value pairs where each standard header is a key and the extracted header is the value.
+    
+    Example 1: if you get a heading Professional Summary, I want you to map it to "Summary". 
+    Example 2: if you get a heading Work Experience, I want you to map it to "Experience".
+
+
+    Your task is to return a python dictionary where the keys are the standard headers and the values are the extracted headers. 
+
+    CRITICAL RULES:
+
+    1. Do not create other keys, only find matches for the provided keys.\
+    
+    2. If a key doesn't have a match, set it equal to an empty string ""
+
+    3. If no match is found for any standard header, return an empty dictionary.
+
+    Do not include explanations, code, markdown, or any other text.
+
+"""
+    standard_headings_map = get_standard_headings_map(
+        cleaned_headers, 
+        standard_headings_prompt
+    )
+
+    print("\n✅ Standard headings map from Llama:")
+    print(standard_headings_map)
+    
