@@ -100,7 +100,7 @@ class LayoutClassExtractor:
 
         
         print(f"✅ Groq Cleaned Headers: {cleaned_headers}")
-
+        self.groq_inputs = linewise_content_with_fonts
         self.sub_headings = {
             self._normalize(h) for h in cleaned_headers
         }
@@ -272,16 +272,14 @@ class LayoutClassExtractor:
     --------------------------------------------------------------------------------------------------------------------
 
     """,
-
-            "GROQ HEADINGS": sorted(set(self.sub_headings)),
+            "GROQ INPUTS": self.groq_inputs,
 
             "seperator2": """
 
     --------------------------------------------------------------------------------------------------------------------
 
     """,
-
-            "SECTIONS BY HEADERS": sections,
+            "GROQ HEADINGS": sorted(set(self.sub_headings)),
 
             "seperator3": """
 
@@ -289,9 +287,17 @@ class LayoutClassExtractor:
 
     """,
 
-            "ACTION WORDS": self.return_action_words(),
+            "SECTIONS BY HEADERS": sections,
 
             "seperator4": """
+
+    --------------------------------------------------------------------------------------------------------------------
+
+    """,
+
+            "ACTION WORDS": self.return_action_words(),
+
+            "seperator5": """
 
     --------------------------------------------------------------------------------------------------------------------
 
