@@ -79,6 +79,8 @@ def map_many_headings(
         "canonical": canonical
     }
 
+def run_fuzzy_mapping(headings: List[str]) -> dict:
+    return map_many_headings(headings)
 
 if __name__ == "__main__":
 
@@ -93,7 +95,7 @@ if __name__ == "__main__":
         "What I Built",
     ]
 
-    output = map_many_headings(sample_headings)
+    output = run_fuzzy_mapping(sample_headings)
 
     print("\n=== Fuzzy Mapping Output ===")
     print(output)

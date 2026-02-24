@@ -1,5 +1,6 @@
 from font_based_line_grouping import filter_body_content
 from transformer_inference import run_transformer_mapping
+from fuzzy_inference import run_fuzzy_mapping
 from urllib.parse import urlparse
 from io import BytesIO
 from groq import Groq
@@ -115,6 +116,11 @@ def handler(event, context):
 
         print(f"📃 Standard Headers from Transformer: {transformer_output}")
 
+        # Run fuzzy mapping
+        fuzzy_output = run_fuzzy_mapping(cleaned_headers_list)
+
+        print(f"📃 Standard Headers from Fuzzy: {fuzzy_output}")
+
 
         results = {
             "Line wise content with fonts": linewise_content_with_fonts,
@@ -165,15 +171,23 @@ def handler(event, context):
 
 
 """,
-            "Standard headings map from Transformer": transformer_output
+            "Standard headings map from Transformer": transformer_output,
+            "seperator7": """
+
+            
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+
+""",        
+            "Standard headings map from Fuzzy": fuzzy_output["canonical"]
         }
 
         print("✅ Extraction completed")
         print(f"📃 Final Response: \n {results}")
 
-        with open("output.json", "w") as f:
-            json.dump(results, f, indent=4)
-            
+        # with open("output.json", "w") as f:
+        #     json.dump(results, f, indent=4)
+
         return {
                 "statusCode": 200,
                 "headers": {
@@ -301,3 +315,8 @@ if __name__ == "__main__":
     transformer_output = run_transformer_mapping(cleaned_headers_list)
 
     print(f"📃 Standard Headers from Transformer: {transformer_output}")
+
+    # Run fuzzy based mapper
+    fuzzy_output = run_fuzzy_mapping(cleaned_headers_list)
+
+    print(f"📃 Standard Headers from Fuzzy: {fuzzy_output}")
