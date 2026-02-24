@@ -6,7 +6,9 @@ from typing import List, Tuple, Dict
 from collections import defaultdict
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
+import torch
+import torch.nn.functional as F
+
 
 
 @dataclass(frozen=True)
@@ -28,21 +30,35 @@ class PureLabelMapper:
 
     def __init__(
         self,
-        model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
+        model_path: str = "local_model",
         labels: List[str] | None = None,
         min_score: float = 0.55,
         min_gap: float = 0.10,
         min_ratio: float = 1.25,
     ):
-        self.model = SentenceTransformer(model_name)
+        import torch
+        from transformers import AutoTokenizer, AutoModel
+
+        self.device = torch.device("cpu")
+
+        # Load tokenizer + model from local directory
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+        self.model = AutoModel.from_pretrained(model_path)
+
+        self.model.to(self.device)
+        self.model.eval()
+
         self.labels = labels or ["Projects", "Experience", "Summary"]
 
         self.min_score = float(min_score)
         self.min_gap = float(min_gap)
         self.min_ratio = float(min_ratio)
 
-        # Embed ONLY the label names (no prototypes), keep keys EXACTLY as labels
-        self.label_embs = {lbl: self._encode(lbl.lower()) for lbl in self.labels}
+        # Pre-compute label embeddings
+        self.label_embs = {
+            lbl: self._encode(lbl.lower())
+            for lbl in self.labels
+        }
 
     @staticmethod
     def _clean(s: str) -> str:
@@ -50,8 +66,35 @@ class PureLabelMapper:
 
     @lru_cache(maxsize=50000)
     def _encode(self, text: str) -> np.ndarray:
-        emb = self.model.encode([text], normalize_embeddings=True)[0]
-        return emb.astype(np.float32)
+
+        inputs = self.tokenizer(
+            text,
+            return_tensors="pt",
+            truncation=True,
+            padding=True,
+            max_length=128
+        )
+
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
+        with torch.no_grad():
+            outputs = self.model(**inputs)
+
+        # Mean pooling
+        token_embeddings = outputs.last_hidden_state
+        attention_mask = inputs["attention_mask"]
+
+        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+
+        sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
+        sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+
+        sentence_embedding = sum_embeddings / sum_mask
+
+        # Normalize (like sentence-transformers does)
+        sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
+
+        return sentence_embedding[0].cpu().numpy().astype(np.float32)
 
     def map_one(self, heading: str) -> MapResult:
         h = self._clean(heading)
