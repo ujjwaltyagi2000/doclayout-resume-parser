@@ -70,6 +70,7 @@ preshed==3.0.8
 pydantic==1.10.8
 requests==2.31.0
 smart-open==6.3.0
+sentence_transformers==5.2.3
 spacy==3.5.3
 spacy-legacy==3.0.12
 spacy-loggers==1.0.4

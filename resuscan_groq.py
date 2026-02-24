@@ -1,10 +1,12 @@
 from font_based_line_grouping import filter_body_content
+from transformer_inference import run_transformer_mapping
 from urllib.parse import urlparse
 from io import BytesIO
 from groq import Groq
 import boto3
 import json
 import time
+import ast
 import os
 
 IS_LAMBDA = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
@@ -105,6 +107,14 @@ def handler(event, context):
         print(f"📃 Standard Headers: {standard_headings_map}")
         # headers = get_headers_from_pdf_bytes(pdf_bytes)
 
+        # Convert cleaned_headers string to Python list
+        cleaned_headers_list = ast.literal_eval(cleaned_headers)
+
+        # Run transformer based mapper
+        transformer_output = run_transformer_mapping(cleaned_headers_list)
+
+        print(f"📃 Standard Headers from Transformer: {transformer_output}")
+
 
         results = {
             "Line wise content with fonts": linewise_content_with_fonts,
@@ -147,12 +157,23 @@ def handler(event, context):
 
 
 """,
-            "Standard headings map from Groq": standard_headings_map
+            "Standard headings map from Groq": standard_headings_map,
+            "seperator6": """
+
+            
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+
+""",
+            "Standard headings map from Transformer": transformer_output
         }
 
         print("✅ Extraction completed")
         print(f"📃 Final Response: \n {results}")
 
+        with open("output.json", "w") as f:
+            json.dump(results, f, indent=4)
+            
         return {
                 "statusCode": 200,
                 "headers": {
@@ -162,6 +183,7 @@ def handler(event, context):
                 },
                 "body": json.dumps(results)
             }
+
 
     except Exception as e:
         print("❌ Error:", str(e))
@@ -272,3 +294,10 @@ if __name__ == "__main__":
     print("\n✅ Standard headings map from Llama:")
     print(standard_headings_map)
     
+    # Convert cleaned_headers string to Python list
+    cleaned_headers_list = ast.literal_eval(cleaned_headers)
+
+    # Run transformer based mapper
+    transformer_output = run_transformer_mapping(cleaned_headers_list)
+
+    print(f"📃 Standard Headers from Transformer: {transformer_output}")
