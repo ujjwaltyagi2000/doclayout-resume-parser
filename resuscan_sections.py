@@ -83,24 +83,15 @@ def build_sections(full_content: list, cleaned_headers: list) -> dict:
     Returns: dict like {'Introduction': [...], 'Experience': [...], ...}
     """
 
-    # Normalize headers for matching
-    # headers_lower = [h.lower().strip() for h in cleaned_headers]
-
-    # def is_header(line_text: str) -> str | None:
-    #     """Returns the original header if line matches, else None"""
-    #     normalized = line_text.lower().strip()
-    #     for i, h in enumerate(headers_lower):
-    #         if normalized == h or normalized.startswith(h):
-    #             return cleaned_headers[i]
-    #     return None
-
     def is_header(line_text: str) -> str | None:
         normalized_line = line_text.lower().strip()
-
+        print(f"📃 Normalized Line: {normalized_line}")
         for header in cleaned_headers:
             normalized_header = header.lower().strip()
+            print(f"📃 Normalized Header: {normalized_header}")
 
             if normalized_header in normalized_line:
+                print(f"📃 Matched Header: {header}")
                 return header
 
         return None
@@ -347,8 +338,8 @@ if __name__ == "__main__":
     # Build Sections
     sections = build_sections(full_resume_content, cleaned_headers_list)
 
-    import json
-    print(json.dumps(sections, indent=2))
+    # import json
+    # print(json.dumps(sections, indent=2))
 
     with open("sections.json", "w") as f:
         json.dump(sections, f, indent=2)
