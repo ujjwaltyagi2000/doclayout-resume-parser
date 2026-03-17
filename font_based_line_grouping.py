@@ -337,6 +337,69 @@ def filter_body_content(pdf_file):
         print(f"❌ Error in filter_body_content: {e}")
         return []
 
+def get_full_content_with_fonts(pdf_file):
+    """Returns ALL lines (body + headers) with font size and y_position"""
+    try:
+        word_positions = []
+        size_to_word = {}
+
+        for page_layout in extract_pages(BytesIO(pdf_file)):
+            for element in page_layout:
+                if isinstance(element, LTTextContainer):
+                    for text_object in element:
+                        if isinstance(text_object, (LTChar, LTAnno)):
+                            continue
+                        
+                        font_size = None
+                        current_word = ''
+                        y_coord = None
+                        
+                        for character in text_object:
+                            if isinstance(character, LTChar):
+                                if font_size is None:
+                                    font_size = round(character.size)
+                                if y_coord is None:
+                                    y_coord = round(character.y0, 1)
+                                
+                                if character.get_text().isspace():
+                                    if current_word:
+                                        word_positions.append((current_word, font_size, y_coord))
+                                        size_to_word.setdefault(font_size, []).append(current_word)
+                                    current_word = ''
+                                    font_size = None
+                                    y_coord = None
+                                else:
+                                    current_word += character.get_text()
+                                    font_size = round(character.size)
+                                    y_coord = round(character.y0, 1)
+                        
+                        if current_word:
+                            word_positions.append((current_word, font_size, y_coord))
+                            size_to_word.setdefault(font_size, []).append(current_word)
+
+        # Group into lines by (y_coord, font_size)
+        lines_dict = {}
+        for word, font_size, y_coord in word_positions:
+            key = (y_coord, font_size)
+            lines_dict.setdefault(key, []).append(word)
+
+        # Sort top to bottom (descending y)
+        sorted_lines = sorted(lines_dict.items(), key=lambda x: x[0][0], reverse=True)
+
+        full_content = []
+        for (y_coord, font_size), words in sorted_lines:
+            full_content.append({
+                'text': ' '.join(words),
+                'font': font_size,
+                'y_position': y_coord
+            })
+
+        return full_content
+
+    except Exception as e:
+        print(f"❌ Error in get_full_content_with_fonts: {e}")
+        return []
+
 if __name__ == "__main__":
 
     # pdf_file_path = "Puunita Chaturvedi.pdf"

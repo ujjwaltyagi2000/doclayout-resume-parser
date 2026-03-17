@@ -1,4 +1,4 @@
-from font_based_line_grouping import filter_body_content
+from font_based_line_grouping import filter_body_content, get_full_content_with_fonts
 from transformer_inference import run_transformer_mapping
 from fuzzy_inference import run_fuzzy_mapping
 from urllib.parse import urlparse
@@ -75,6 +75,63 @@ def load_local_pdf(pdf_path: str) -> bytes:
     with open(pdf_path, "rb") as f:
         return f.read()
 
+def build_sections(full_content: list, cleaned_headers: list) -> dict:
+    """
+    full_content: list of {'text', 'font', 'y_position'}  — sorted top to bottom
+    cleaned_headers: list of header strings from Groq (e.g. ['Experience', 'Education'])
+    
+    Returns: dict like {'Introduction': [...], 'Experience': [...], ...}
+    """
+
+    # Normalize headers for matching
+    # headers_lower = [h.lower().strip() for h in cleaned_headers]
+
+    # def is_header(line_text: str) -> str | None:
+    #     """Returns the original header if line matches, else None"""
+    #     normalized = line_text.lower().strip()
+    #     for i, h in enumerate(headers_lower):
+    #         if normalized == h or normalized.startswith(h):
+    #             return cleaned_headers[i]
+    #     return None
+
+    def is_header(line_text: str) -> str | None:
+        normalized_line = line_text.lower().strip()
+
+        for header in cleaned_headers:
+            normalized_header = header.lower().strip()
+
+            if normalized_header in normalized_line:
+                return header
+
+        return None
+    sections = {}
+    current_section = "Introduction"
+    sections[current_section] = []
+
+    for line in full_content:
+        text = line['text'].strip()
+        if not text:
+            continue
+
+        matched_header = is_header(text)
+
+        if matched_header:
+            current_section = matched_header
+            if current_section not in sections:
+                sections[current_section] = []
+        else:
+            sections[current_section].append({
+                'text': text,
+                'font': line['font'],
+                'y_position': line['y_position']
+            })
+
+    # Clean up: remove empty Introduction if nothing before first header
+    if sections.get("Introduction") == []:
+        del sections["Introduction"]
+
+    return sections
+
 def handler(event, context):
     
     start_time = time.time()
@@ -110,6 +167,16 @@ def handler(event, context):
 
         # Convert cleaned_headers string to Python list
         cleaned_headers_list = ast.literal_eval(cleaned_headers)
+        # cleaned_headers_list = ast.literal_eval(cleaned_headers)
+
+        # Build Sections
+        sections = build_sections(full_resume_content, cleaned_headers_list)
+
+        import json
+        print(json.dumps(sections, indent=2))
+
+        with open("sections.json", "w") as f:
+            json.dump(sections, f, indent=2)
 
         # Run transformer based mapper
         transformer_output = run_transformer_mapping(cleaned_headers_list)
@@ -186,7 +253,7 @@ def handler(event, context):
         print(f"📃 Final Response: \n {results}")
 
         # with open("output.json", "w") as f:
-        #     json.dump(results, f, indent=4)
+            # json.dump(results, f, indent=4)
 
         return {
                 "statusCode": 200,
@@ -221,12 +288,17 @@ if __name__ == "__main__":
     # pdf_file_path = "resume.pdf"
     # pdf_file_path = "Ujjwal Tyagi.pdf"
     # pdf_file_path = "TANVI GAWALI CV.pdf"
-    pdf_file_path = "resume/Megha resume.pdf"
+    # pdf_file_path = "resume/Megha resume.pdf"
+    pdf_file_path = "resume/Puunita Chaturvedi.pdf"
 
     print(f"📁 File Name: {pdf_file_path}")
     pdf_file = load_local_pdf(pdf_file_path)
     
     linewise_content_with_fonts, font_and_words, max_font_size, max_words = filter_body_content(pdf_file)
+
+    full_resume_content = get_full_content_with_fonts(pdf_file)
+
+    print(full_resume_content)
     
     # Print line by line
     # print(lines)
@@ -270,6 +342,17 @@ if __name__ == "__main__":
     print("\n✅ Cleaned Resume Headers from LLaMA:")
     print(cleaned_headers)
 
+    cleaned_headers_list = ast.literal_eval(cleaned_headers)
+
+    # Build Sections
+    sections = build_sections(full_resume_content, cleaned_headers_list)
+
+    import json
+    print(json.dumps(sections, indent=2))
+
+    with open("sections.json", "w") as f:
+        json.dump(sections, f, indent=2)
+
     # ✅ More precise prompt
     standard_headings_prompt = f"""
 
@@ -308,15 +391,15 @@ if __name__ == "__main__":
     print("\n✅ Standard headings map from Llama:")
     print(standard_headings_map)
     
-    # Convert cleaned_headers string to Python list
-    cleaned_headers_list = ast.literal_eval(cleaned_headers)
+    # # Convert cleaned_headers string to Python list
+    # cleaned_headers_list = ast.literal_eval(cleaned_headers)
 
-    # Run transformer based mapper
-    transformer_output = run_transformer_mapping(cleaned_headers_list)
+    # # Run transformer based mapper
+    # transformer_output = run_transformer_mapping(cleaned_headers_list)
 
-    print(f"📃 Standard Headers from Transformer: {transformer_output}")
+    # print(f"📃 Standard Headers from Transformer: {transformer_output}")
 
-    # Run fuzzy based mapper
-    fuzzy_output = run_fuzzy_mapping(cleaned_headers_list)
+    # # Run fuzzy based mapper
+    # fuzzy_output = run_fuzzy_mapping(cleaned_headers_list)
 
-    print(f"📃 Standard Headers from Fuzzy: {fuzzy_output}")
+    # print(f"📃 Standard Headers from Fuzzy: {fuzzy_output}")
