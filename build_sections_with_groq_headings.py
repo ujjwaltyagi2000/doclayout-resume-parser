@@ -16,7 +16,7 @@ Status: Working ✅
 
 from doclayout_yolo import YOLOv10
 # from resuscan_fonts import get_headings, get_heading_font_sizes  # Added get_heading_font_sizes
-from resuscan_groq import filter_body_content, filter_headers_with_groq
+from resuscan_groq import filter_body_content, filter_headers_with_groq, get_standard_headings_map
 from urllib.parse import urlparse
 from collections import defaultdict
 
@@ -40,7 +40,7 @@ LOCAL_OUTPUT_FILE_PATH = os.path.join(LOCAL_OUTPUT_DIR, LOCAL_OUTPUT_JSON_FILE_N
 CLASS_NAMES = MODEL.names
 
 # Prompt for local testing:
-prompt_template = """
+cleaned_headers_prompt_template = """
     Extract valid resume section headers from this list: {headers}
 
     Each List Item contains three fields: 
@@ -60,11 +60,40 @@ prompt_template = """
     Do not include explanations, code, markdown, or any other text.
     """
 
+standard_headings_prompt = """
+
+    You are a resume expert. I will provide you with a set of headers that are extracted from a resume.
+
+    Here are the extracted headers: {cleaned_headers}
+    
+    There are multiple ways to write the same thing. Example: Professional Experience, Work Experience, Work history, all can be called "Experience".
+
+    Here is a list of Standard Headers: ["Objective", "Summary", "Experience", "Projects"]  
+    
+    I want you map the extract headers to the Standard Headers as key value pairs where each standard header is a key and the extracted header is the value.
+    
+    Example 1: if you get a heading Professional Summary, I want you to map it to "Summary". 
+    Example 2: if you get a heading Work Experience, I want you to map it to "Experience".
+
+
+    Your task is to return a python dictionary where the keys are the standard headers and the values are the extracted headers. 
+
+    CRITICAL RULES:
+
+    1. Do not create other keys, only find matches for the provided keys.\
+    
+    2. If a key doesn't have a match, set it equal to an empty string ""
+
+    3. If no match is found for any standard header, return an empty dictionary.
+
+    Do not include explanations, code, markdown, or any other text.
+
+"""
 # =========================
 # Layout extractor
 # =========================
 class LayoutClassExtractor:
-    def __init__(self, pdf_bytes, prompt, dpi=300, conf=0.15):
+    def __init__(self, pdf_bytes, prompt, standard_prompt, dpi=300, conf=0.15):
         # -------------------------
         # Step 1: Get headings via Groq (LLM filtering)
         # -------------------------
@@ -106,6 +135,9 @@ class LayoutClassExtractor:
 
         print(f"🚀 Sub Headings: {self.sub_headings}")
 
+        standard_headings_map = get_standard_headings_map(cleaned_headers, standard_prompt)
+
+        self.standard_headings_map = standard_headings_map
         self.detected_blocks = []
         self.pages_info = self._pdf_to_images()
         self.body_content_for_prompt = linewise_content_with_fonts
@@ -266,23 +298,38 @@ class LayoutClassExtractor:
 
     """,
 
-            "sub_headings": sorted(set(self.sub_headings)),
+            # ✅ ADD THIS BLOCK
+            "FILTERED BODY CONTENT": self.body_content_for_prompt,
 
             "seperator2": """
 
     --------------------------------------------------------------------------------------------------------------------
 
     """,
-
-            "sections_by_header": sections,
+            "CLEANED HEADERS FROM GROQ": sorted(set(self.sub_headings)),
 
             "seperator3": """
 
     --------------------------------------------------------------------------------------------------------------------
 
     """,
+            "STANDARD HEADINGS MAP": self.standard_headings_map,
 
-            "full_resume_text": self._get_full_resume_text()
+            "seperator4": """
+
+    --------------------------------------------------------------------------------------------------------------------
+
+    """,
+
+            "SECTIONS BY HEADERS": sections,
+
+            "seperator5": """
+
+    --------------------------------------------------------------------------------------------------------------------
+
+    """,
+
+            "FULL RESUME TEXT": self._get_full_resume_text()
         }
 
         return final_output
@@ -325,7 +372,7 @@ def load_local_pdf(pdf_path: str) -> bytes:
     with open(pdf_path, "rb") as f:
         return f.read()
 
-def test_local_resume(pdf_path: str, prompt = prompt_template, dpi=300, conf=0.15):
+def test_local_resume(pdf_path: str, prompt = cleaned_headers_prompt_template, dpi=300, conf=0.15):
     print("🧪 Running local resume test")
     print(f"📄 File: {pdf_path}")
 
@@ -333,7 +380,8 @@ def test_local_resume(pdf_path: str, prompt = prompt_template, dpi=300, conf=0.1
 
     extractor = LayoutClassExtractor(
         pdf_bytes=pdf_bytes,
-        prompt=prompt_template,
+        prompt=cleaned_headers_prompt_template,
+        standard_prompt=standard_headings_prompt,
         dpi=dpi,
         conf=conf
     )
@@ -371,7 +419,8 @@ def handler(event, context):
 
         confidence_threshold = req_body.get("confidence_threshold", 0.15)
         dpi = req_body.get("dpi", 300)
-        prompt = req_body.get("prompt", prompt_template)
+        prompt = req_body.get("prompt", cleaned_headers_prompt_template)
+        standard_headings_prompt = req_body["shPrompt"]
 
         pdf_bytes = fetch_pdf_from_s3(
             pdf_url,
@@ -382,6 +431,7 @@ def handler(event, context):
         extractor = LayoutClassExtractor(
             pdf_bytes=pdf_bytes,
             prompt = prompt,
+            standard_prompt = standard_headings_prompt,
             conf=confidence_threshold,
             dpi=dpi
         )
@@ -425,7 +475,7 @@ if __name__ == "__main__":
 
     test_local_resume(
         pdf_path=LOCAL_PDF_PATH,
-        prompt=prompt_template,
+        prompt=cleaned_headers_prompt_template,
         dpi=300,
         conf=0.15
     )

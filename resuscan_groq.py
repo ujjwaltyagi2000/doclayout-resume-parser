@@ -35,6 +35,22 @@ def filter_headers_with_groq(headers, prompt_template):
 
     return cleaned_headers
 
+def get_standard_headings_map(cleaned_headers, prompt_template):
+
+    # Inject headers into the prompt template
+    prompt = prompt_template.format(cleaned_headers=cleaned_headers)
+
+    response = client.chat.completions.create(
+        model="llama-3.1-8b-instant",
+        messages=[
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0
+    )
+
+    standard_headings_map = response.choices[0].message.content
+
+    return standard_headings_map
 
 def fetch_pdf_from_s3(pdf_url: str, aws_access_key: str, aws_secret_key: str) -> bytes:
     parsed_url = urlparse(pdf_url)
