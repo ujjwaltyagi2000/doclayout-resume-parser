@@ -1,0 +1,24 @@
+Steps to push docker image on ECR via EC2 (not Windows as the image manifest type is different there)
+
+1. Login to AWS ECR:
+
+aws ecr get-login-password --region ap-south-1 \
+| docker login --username AWS --password-stdin 313824445793.dkr.ecr.ap-south-1.amazonaws.com
+
+2. Build the image:
+
+docker build -t doclayout-resume-parser-lambda .
+
+3. Tag for ECR
+
+docker tag doclayout-resume-parser-lambda:latest \
+313824445793.dkr.ecr.ap-south-1.amazonaws.com/doclayout-resume-parser-lambda:latest
+
+4. Push to ECR
+
+docker push 313824445793.dkr.ecr.ap-south-1.amazonaws.com/doclayout-resume-parser-lambda:latest
+
+
+Result: The image media type should now be "application/vnd.docker.distribution.manifest.v2+json" instead of "application/vnd.oci.image.index.v1+json"
+
+
