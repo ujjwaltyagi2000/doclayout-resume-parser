@@ -1,4 +1,3 @@
-
 """
 Built over resuscan_getheadings.py.
 

@@ -108,6 +108,7 @@ class LayoutClassExtractor:
 
         self.detected_blocks = []
         self.pages_info = self._pdf_to_images()
+        self.body_content_for_prompt = linewise_content_with_fonts
 
     # =========================
     # Utilities
@@ -324,7 +325,7 @@ def load_local_pdf(pdf_path: str) -> bytes:
     with open(pdf_path, "rb") as f:
         return f.read()
 
-def test_local_resume(pdf_path: str, dpi=300, conf=0.15):
+def test_local_resume(pdf_path: str, prompt = prompt_template, dpi=300, conf=0.15):
     print("🧪 Running local resume test")
     print(f"📄 File: {pdf_path}")
 
