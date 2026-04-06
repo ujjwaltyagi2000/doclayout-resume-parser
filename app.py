@@ -253,7 +253,7 @@ if __name__ == "__main__":
     start_time = time.time()
     # pdf_path = "resume/66c526ef-0081-40e6-8ebe-5102e2993746Backend Developer_1752129955434.pdf" # Change this to your PDF file path
     # # pdf_path = "Ujjwal Tyagi Resume Sept 2025.pdf" # Change this to your PDF file path
-    pdf_path = "resume/Siddhant_Jha_Resume.pdf" # Change this to your PDF file path
+    pdf_path = "Puunita Chaturvedi.pdf" # Change this to your PDF file path
     # # pdf_path = "Shrey Dhawan Basic Resume.pdf" # Change this to your PDF file path
     # pdf_path = "Umang Bhola - Resume.pdf" # Change this to your PDF file path
     out_path = "headers_text_output/" # Change this to your output directory

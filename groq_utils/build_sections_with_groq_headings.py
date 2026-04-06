@@ -16,7 +16,7 @@ Status: Working ✅
 
 from doclayout_yolo import YOLOv10
 # from resuscan_fonts import get_headings, get_heading_font_sizes  # Added get_heading_font_sizes
-from resuscan_groq import filter_body_content, filter_headers_with_groq, get_standard_headings_map
+from groq_utils.resuscan_groq import filter_body_content, filter_headers_with_groq, get_standard_headings_map
 from urllib.parse import urlparse
 from collections import defaultdict
 

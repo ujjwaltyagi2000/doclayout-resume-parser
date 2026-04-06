@@ -13,7 +13,7 @@ Status: Working ✅
 """
 
 from doclayout_yolo import YOLOv10
-from resuscan_getheadings import get_headings
+from info.resuscan_getheadings import get_headings
 from urllib.parse import urlparse
 from collections import defaultdict
 

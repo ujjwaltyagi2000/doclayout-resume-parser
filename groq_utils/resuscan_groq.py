@@ -1,4 +1,4 @@
-from font_based_line_grouping import filter_body_content
+from info.font_based_line_grouping import filter_body_content
 from urllib.parse import urlparse
 from io import BytesIO
 from groq import Groq
