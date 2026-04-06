@@ -420,7 +420,8 @@ def handler(event, context):
         confidence_threshold = req_body.get("confidence_threshold", 0.15)
         dpi = req_body.get("dpi", 300)
         prompt = req_body.get("prompt", cleaned_headers_prompt_template)
-        standard_headings_prompt = req_body.get("shPrompt", standard_headings_prompt)
+        # standard_headings_prompt = req_body.get("shPrompt", standard_headings_prompt)
+        standard_prompt = req_body.get("shPrompt", standard_headings_prompt)
 
         pdf_bytes = fetch_pdf_from_s3(
             pdf_url,
@@ -430,8 +431,8 @@ def handler(event, context):
 
         extractor = LayoutClassExtractor(
             pdf_bytes=pdf_bytes,
-            prompt = prompt,
-            standard_prompt = standard_headings_prompt,
+            prompt=prompt,
+            standard_prompt=standard_prompt,
             conf=confidence_threshold,
             dpi=dpi
         )

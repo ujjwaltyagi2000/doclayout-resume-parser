@@ -1,0 +1,8 @@
+.gitignore
+.python-version
+*.pdf
+resuscan-env/
+.env
+__pycache__/
+json/
+section_header.json
