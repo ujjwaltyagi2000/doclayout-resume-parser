@@ -1,9 +1,8 @@
 """
-Built over resuscan_getheadings.py.
 
-Also returns the font sizes of the headings
+Script to extract headings from a PDF resume using pdfminer and pdfplumber, and match them against predefined categories and standard headings.
+
 """
-
 
 import pathlib
 from typing import (
@@ -238,35 +237,29 @@ def standard_headingsMatch(word_list):
                 standard_match =[]
                 return standard_match,len(standard_match)
 
-def filter_body_content(pdf_file):
+def get_headings(pdf_file):
+    # scrape and divivde all the words into groups
     try: 
+        print("✅ Inside get_headings function")
         word_to_size = {}
         size_to_word = {}
-        word_positions = []  # Store (word, font_size, y_coordinate)
+
 
         for page_layout in extract_pages(BytesIO(pdf_file)):
             for element in page_layout:
                 if isinstance(element, LTTextContainer):
                     for text_object in element:
                         if isinstance(text_object, (LTChar, LTAnno)):
-                            continue
-                        
+                            continue  # Skip individual characters and annotations
                         font_size = None
                         current_word = ''
-                        y_coord = None
-                        
                         for character in text_object:
                             if isinstance(character, LTChar):
                                 if font_size is None:
                                     font_size = round(character.size)
-                                if y_coord is None:
-                                    y_coord = round(character.y0, 1)  # Get y-coordinate
-                                
                                 if character.get_text().isspace():
+                                    # End of word
                                     if current_word:
-                                        # Store word with position
-                                        word_positions.append((current_word, font_size, y_coord))
-                                        
                                         if current_word not in word_to_size:
                                             word_to_size[current_word] = [font_size]
                                         else:
@@ -277,14 +270,11 @@ def filter_body_content(pdf_file):
                                             size_to_word[font_size].append(current_word)
                                     current_word = ''
                                     font_size = None
-                                    y_coord = None
                                 else:
                                     current_word += character.get_text()
                                     font_size = round(character.size)
-                                    y_coord = round(character.y0, 1)
-                        
+                        # Check if there is a last word
                         if current_word:
-                            word_positions.append((current_word, font_size, y_coord))
                             if current_word not in word_to_size:
                                 word_to_size[current_word] = [font_size]
                             else:
@@ -294,69 +284,125 @@ def filter_body_content(pdf_file):
                             else:
                                 size_to_word[font_size].append(current_word)
 
-        # Find the body font size (most common)
+
         max_size = None
         max_words = []
-        font_and_words = []
+        other_sizes = {}
+
         for size, words in size_to_word.items():
-            font_and_words.append({"size":size, "words": len(words)})
-            print(f"🚀 Size: {size}, Words: {len(words)}")
             if max_size is None or len(words) > len(max_words):
                 max_size = size
                 max_words = words
         
-        print(f"✅ Body Font Size: {max_size}, Words: {len(max_words)}")
 
-        # Filter out body content and group by lines
-        lines_dict = {}  # {(y_coord, font_size): [words]}
-        
-        for word, font_size, y_coord in word_positions:
-            if font_size != max_size:  # Exclude body content
-                key = (y_coord, font_size)
-                if key not in lines_dict:
-                    lines_dict[key] = []
-                lines_dict[key].append(word)
-        
-        # Sort by y-coordinate (descending, top to bottom)
-        sorted_lines = sorted(lines_dict.items(), key=lambda x: x[0][0], reverse=True)
-        
-        # Format output as lines
-        result = []
-        for (y_coord, font_size), words in sorted_lines:
-            line_text = ' '.join(words)
-            result.append({
-                'text': line_text,
-                'font': font_size,
-                'y_position': y_coord
-            })
-        
-        return result, font_and_words, max_size, len(max_words)
 
+        for size, words in size_to_word.items():
+            if size != max_size:
+                other_sizes[size] = words
+
+    
+        words_to_check=[]
+        for words in other_sizes.values():
+            words_to_check.append(words)
+    
+
+        words_to_check_flat = [word for sublist in words_to_check for word in sublist]
+        total_words = [word for words in size_to_word.values() for word in words]
+    
+
+            
+        with pdfplumber.open(BytesIO(pdf_file)) as pdf:
+            word_array = []
+            for page in pdf.pages:
+                clean_text = page.filter(lambda obj: not (obj["object_type"] == "char" and "Bold" in obj["fontname"]))
+                words = clean_text.extract_text().split()
+                for word in words:
+                    if all(ord(c) < 128 for c in word):
+                        word_array.append(word)
+        
+
+        #getting uppercase words
+        # Open PDF file
+        with pdfplumber.open(BytesIO(pdf_file)) as pdf:
+            
+            # Initialize list to store uppercase words
+            uppercase_words = []
+            
+            
+            # Iterate through each page of the PDF
+            for page in pdf.pages:
+                
+                # Extract text from page and split into words
+                text = page.extract_text()
+                
+                
+                # Loop through each word and check if it is uppercase
+                for word in text.split():
+                    if word.isupper() or (word[0].isupper() and "&" in word):
+                        uppercase_words.append(word)
+                    if word=='&':
+                        uppercase_words.append(word)
+    
+
+        headings_four=extract_headings_two(words_to_check_flat)
+    
+
+        if(len(headings_four)==0):
+            
+            word_array.extend(uppercase_words)
+            headings_three = extract_headings_two(word_array)
+            # headings_two = extract_headings_two(uppercase_words)
+        
+            # headings_two = {word.lower() for word in headings_two}
+            # headings_three = {word.lower() for word in headings_three}
+        
+            
+            # common_words = headings_three.intersection(headings_two)
+        
+            # all_words = list((headings_three - common_words) | (headings_two - common_words) | common_words)
+        
+
+            if(len(headings_three)==0):
+                headings_all = extract_headings_two(total_words)
+            
+            
+                categories_list,nr,wp,es,oth,oth_db,section_map,section_map_count=matchCategories(headings_all)
+                
+                standard_match , standard_match_count = standard_headingsMatch(headings_all)
+                return list(categories_list),list(headings_all),list(nr),list(wp),list(es),list(oth),list(oth_db),section_map,section_map_count,standard_match,standard_match_count
+            else:
+            
+                # print("at uppercase & bold ---->")
+                categories_list,nr,wp,es,oth,oth_db,section_map,section_map_count=matchCategories(headings_three)
+                
+                standard_match , standard_match_count = standard_headingsMatch(headings_three)
+                return list(categories_list),list(headings_three),list(nr),list(wp),list(es),list(oth),list(oth_db),section_map,section_map_count,standard_match,standard_match_count
+        else:
+        
+            categories_list,nr,wp,es,oth,oth_db,section_map,section_map_count=matchCategories(headings_four)
+            
+            standard_match , standard_match_count = standard_headingsMatch(headings_four)
+            return list(categories_list),list(headings_four),list(nr),list(wp),list(es),list(oth),list(oth_db),section_map,section_map_count,standard_match , standard_match_count 
     except Exception as e:
-        print(f"❌ Error in filter_body_content: {e}")
-        return []
+        print("get_headings ",e)
+        return [],[],[],[],[],[],[],[],[],[],[]
 
 if __name__ == "__main__":
 
-    # pdf_file_path = "Puunita Chaturvedi.pdf"
-    # pdf_file_path = "resume.pdf"
-    # pdf_file_path = "Ujjwal Tyagi.pdf"
-    pdf_file_path = "TANVI GAWALI CV.pdf"
-    # pdf_file_path = "Megha resume.pdf"
+    pdf_file_path = "Puunita Chaturvedi.pdf"
     
     # Read the PDF file as bytes
     with open(pdf_file_path, 'rb') as f:
         pdf_file = f.read()
 
-    lines = filter_body_content(pdf_file)
-    
-    # Print line by line
-    # print(lines)
+    headings, subHeadings, notRequired_Heading, Work_Project_Headings, EduSkill_Headings, Other_Headings, Other_headings_db, sectionMap, sectionMapCount, standard_match_headings, standard_match_headings_count = get_headings(pdf_file)
 
-    
-    filtered_data = [
-        {k: v for k, v in item.items() if k != 'y_position'}
-        for item in lines
-    ]
+    # print(headings, subHeadings, notRequired_Heading, Work_Project_Headings, EduSkill_Headings, Other_Headings, Other_headings_db, sectionMap, sectionMapCount, standard_match_headings, standard_match_headings_count)
 
-    print(filtered_data)
+    # printing all values separately:
+    print("🔍 get_headings() outputs: ")
+    print(f"\nHeadings: {headings}, \nSub Headings: {subHeadings}, \nNot Required heading: {notRequired_Heading}, \nWork Project Headings: {Work_Project_Headings}\n\n")
+    actualHeadingsCount = len(subHeadings)
+    NRlength = len(notRequired_Heading)
+    ORlength = len(Other_Headings)
+    ORlength_db=len(Other_headings_db)

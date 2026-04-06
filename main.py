@@ -1,5 +1,9 @@
 from parser.pdf_parser import load_local_pdf, fetch_pdf_from_s3
 from parser.yolo_parser import LayoutParser
+from extraction.headings import get_headings
+from extraction.body_content import filter_body_content
+from groq_utils.cleaned_headers import filter_headers_with_groq, get_standard_headings_map
+from groq_utils.prompts import *
 # from groq_utils.resuscan_groq import filter_body_content, filter_headers_with_groq
 
 # Pass PDF bytes to YOLO layout parser and get detected blocks
@@ -26,8 +30,38 @@ def process_resume(pdf_bytes):
     }
 
 if __name__ == "__main__":
+
     # For local testing
+    
+    # convert local PDF to bytes
     pdf_path = "Puunita Chaturvedi.pdf"
     pdf_bytes = load_local_pdf(pdf_path)
-    results = process_resume(pdf_bytes)
-    print(results)
+
+    # YOLO Pass
+    # results = process_resume(pdf_bytes)
+    # print(results)
+
+    # Extract Headings using Resuscan Code
+    # headings, subHeadings, notRequired_Heading, Work_Project_Headings, EduSkill_Headings, Other_Headings, Other_headings_db, sectionMap, sectionMapCount, standard_match_headings, standard_match_headings_count = get_headings(pdf_bytes)
+    # # printing all values separately:
+    # print("🔍 get_headings() outputs: ")
+    # print(f"\nHeadings: {headings}, \nSub Headings: {subHeadings}, \nNot Required heading: {notRequired_Heading}, \nWork Project Headings: {Work_Project_Headings}\n\n")
+    # actualHeadingsCount = len(subHeadings)
+    # NRlength = len(notRequired_Heading)
+    # ORlength = len(Other_Headings)
+    # ORlength_db=len(Other_headings_db)
+    
+
+    # Filter Body Content
+    linewise_content_with_fonts, font_and_words, max_font_size, max_words = filter_body_content(pdf_bytes)
+    print(f"✅ Body Font Size: {max_font_size}, Words: {max_words}")
+    print(f"✅ Font and Words: {font_and_words}")
+    print(f"✅ Linewise content with fonts: {linewise_content_with_fonts[:5]}")
+
+    # Filter Headers with Groq 
+    cleaned_headers = filter_headers_with_groq(linewise_content_with_fonts, cleaned_headers_prompt_template)
+    print(f"✅ Cleaned Headers: {cleaned_headers}")
+
+    # Get Standard Headings Map
+    standard_headings_map = get_standard_headings_map(cleaned_headers, standard_headings_prompt)
+    print(f"✅ Standard Headings Map: {standard_headings_map}")
