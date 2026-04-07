@@ -1,9 +1,9 @@
 from groq_utils.cleaned_headers import filter_headers_with_groq, get_standard_headings_map
-from parser.pdf_parser import load_local_pdf, fetch_pdf_from_s3
+from parsers.pdf_parser import load_local_pdf, fetch_pdf_from_s3
 from extraction.body_content import filter_body_content
 from extraction.section_builder import SectionBuilder 
 from extraction.headings import get_headings
-from parser.yolo_parser import LayoutParser
+from parsers.yolo_parser import LayoutParser
 from groq_utils.prompts import *
 from config.settings import *
 import json
