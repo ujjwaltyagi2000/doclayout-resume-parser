@@ -1,0 +1,18 @@
+[project]
+name = "resuscan-new-0604"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "boto3>=1.42.84",
+    "doclayout-yolo>=0.0.4",
+    "groq>=1.1.2",
+    "huggingface-hub>=1.9.0",
+    "nltk>=3.9.4",
+    "pandas>=3.0.2",
+    "pdfminer>=20191125",
+    "pdfplumber>=0.11.9",
+    "pymupdf>=1.27.2.2",
+    "python-dotenv>=1.2.2",
+]

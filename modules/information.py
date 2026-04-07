@@ -245,3 +245,6 @@ if __name__ == "__main__":
     print("Filler Words:", filler_words)
     print("Total Filler Words:", total_filler_words)
     print("All Filler Words:", all_filler_words)
+
+    voice = text_voice(text)
+    print("Passive Voice Constructions:", voice)
