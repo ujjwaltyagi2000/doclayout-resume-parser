@@ -2,8 +2,10 @@ from groq_utils.cleaned_headers import filter_headers_with_groq, get_standard_he
 from parsers.pdf_parser import load_local_pdf, fetch_pdf_from_s3
 from extraction.body_content import filter_body_content
 from extraction.section_builder import SectionBuilder 
+from extraction.section_mapper import map_content_to_standard_header
 from extraction.headings import get_headings
 from parsers.yolo_parser import LayoutParser
+from modules.information import *
 from groq_utils.prompts import *
 from config.settings import *
 import json
@@ -38,8 +40,8 @@ if __name__ == "__main__":
     # For local testing
     
     # convert local PDF to bytes
-    # pdf_path = "Puunita Chaturvedi.pdf"
-    # pdf_bytes = load_local_pdf(pdf_path)
+    pdf_path = "Puunita Chaturvedi.pdf"
+    pdf_bytes = load_local_pdf(pdf_path)
     
     # For S3 PDF
     pdf_bytes = fetch_pdf_from_s3(
@@ -47,6 +49,8 @@ if __name__ == "__main__":
         os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
         os.getenv("AWS_SECRET_KEY")   #
     )
+
+    # pdf text
 
     # YOLO Pass
     results = process_resume(pdf_bytes)
@@ -95,4 +99,56 @@ if __name__ == "__main__":
         json.dump(sections, f, indent=4)
 
     print(f"💾 Section building complete. Sections saved to {SECTIONS_OUPUT_FILE_PATH}")
-    # print(f"📦 Sections: {list(sections.keys())}")
+    print(f"📦 Sections: {list(sections.keys())}")
+
+    standard_sections = map_content_to_standard_header(sections, standard_headings_map)
+
+    with open(STANDARD_SECTIONS_OUTPUT_FILE_PATH, "w") as f:
+        json.dump(standard_sections, f, indent=4)
+
+    experience_and_projects_content = standard_sections.get("Experience", "") + " " + standard_sections.get("Projects", "")
+    # print(f"✅ Experience and Projects Content: {experience_and_projects_content}")
+
+    # ACTION WORDS
+    action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content)
+
+    print("Action Words:", action_words)
+    print("Total Action Words:", total_action_words)
+    print("All Action Words:", all_action_words)
+
+    frequency_list, total_frequent_action_words, repeated_frequency = frequency_Action_words(all_action_words)
+    print("Frequent Action Words (appearing at least 3 times):", frequency_list)
+    print("Total Frequent Action Words:", total_frequent_action_words)
+    print("Repeated Frequency of Action Words:", repeated_frequency)
+
+    negative_action_words, total_negative_action_words, all_negative_action_words = get_negative_action_words(experience_and_projects_content)
+    print("Negative Action Words:", negative_action_words)
+    print("Total Negative Action Words:", total_negative_action_words)
+    print("All Negative Action Words:", all_negative_action_words)
+
+    filler_words, total_filler_words, all_filler_words = get_filler_words(experience_and_projects_content)
+    print("Filler Words:", filler_words)
+    print("Total Filler Words:", total_filler_words)
+    print("All Filler Words:", all_filler_words)
+
+    voice = text_voice(experience_and_projects_content)
+    print("Passive Voice Constructions:", voice)
+
+    # save outputs to a file
+    output_data = {
+        "action_words": action_words,
+        "total_action_words": total_action_words,
+        "all_action_words": all_action_words,
+        "frequent_action_words": frequency_list,
+        "total_frequent_action_words": total_frequent_action_words,
+        "repeated_frequency": repeated_frequency,
+        "negative_action_words": negative_action_words,
+        "total_negative_action_words": total_negative_action_words,
+        "all_negative_action_words": all_negative_action_words,
+        "filler_words": filler_words,
+        "total_filler_words": total_filler_words,
+        "all_filler_words": all_filler_words,
+        "passive_voice_constructions": voice
+    }
+    with open(OUTPUT_FILE_PATH, "w") as f:
+        json.dump(output_data, f, indent=4)

@@ -225,6 +225,7 @@ def text_voice(text):
         return []
     
 if __name__ == "__main__":
+    
     text = "Led a team of 5 software engineers to develop a new feature that increased user engagement by 20%."
     action_words, total_action_words, all_action_words = get_action_words(text)
     print("Action Words:", action_words)

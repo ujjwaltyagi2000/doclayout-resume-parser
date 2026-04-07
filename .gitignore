@@ -12,3 +12,5 @@ payload/
 offline.py
 old_runner.py
 resuscan-new
+resume_scan_lambda.py
+*.json

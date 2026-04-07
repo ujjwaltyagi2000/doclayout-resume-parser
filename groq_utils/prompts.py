@@ -38,7 +38,7 @@ standard_headings_prompt = """
 
     CRITICAL RULES:
 
-    1. Do not create other keys, only find matches for the provided keys.\
+    1. Do not create other keys, only find matches for the provided keys.
     
     2. If a key doesn't have a match, set it equal to an empty string ""
 
