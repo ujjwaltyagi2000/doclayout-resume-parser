@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "boto3>=1.42.84",
     "doclayout-yolo>=0.0.4",
+    "en-core-web-sm",
     "groq>=1.1.2",
     "huggingface-hub>=1.9.0",
     "nltk>=3.9.4",
@@ -15,4 +16,8 @@ dependencies = [
     "pdfplumber>=0.11.9",
     "pymupdf>=1.27.2.2",
     "python-dotenv>=1.2.2",
+    "spacy>=3.8.14",
 ]
+
+[tool.uv.sources]
+en-core-web-sm = { url = "https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl" }
