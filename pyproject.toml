@@ -15,9 +15,11 @@ dependencies = [
     "pandas>=3.0.2",
     "pdfminer>=20191125",
     "pdfplumber>=0.11.9",
+    "phonenumbers>=9.0.27",
     "pymupdf>=1.27.2.2",
     "python-dotenv>=1.2.2",
     "spacy>=3.8.14",
+    "webcolors>=25.10.0",
 ]
 
 [tool.uv.sources]

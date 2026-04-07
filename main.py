@@ -1,11 +1,12 @@
 from groq_utils.cleaned_headers import filter_headers_with_groq, get_standard_headings_map
-from parsers.pdf_parser import load_local_pdf, fetch_pdf_from_s3
+from parsers.pdf_parser import load_local_pdf, fetch_pdf_from_s3, extract_full_text
+from extraction.section_mapper import map_content_to_standard_header
 from extraction.body_content import filter_body_content
 from extraction.section_builder import SectionBuilder 
-from extraction.section_mapper import map_content_to_standard_header
 from extraction.headings import get_headings
 from parsers.yolo_parser import LayoutParser
 from modules.information import *
+# from modules.presentation import *
 from groq_utils.prompts import *
 from config.settings import *
 import json
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     experience_and_projects_content = standard_sections.get("Experience", "") + " " + standard_sections.get("Projects", "")
     # print(f"✅ Experience and Projects Content: {experience_and_projects_content}")
 
-    # ACTION WORDS
+    # INFORMATION MENU METRICS
     action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content)
 
     print("Action Words:", action_words)
@@ -134,6 +135,18 @@ if __name__ == "__main__":
     voice = text_voice(experience_and_projects_content)
     print("Passive Voice Constructions:", voice)
 
+
+    # # PRESENTATION MENU METRICS
+    # font_styles,standard_font_style_flag,multiple_font_style,font_sizes,multiple_font_size = get_font_style_size(pdf_bytes)
+    # print("Font Styles:", font_styles)
+    # print("Standard Font Style Flag:", standard_font_style_flag)
+    # print("Multiple Font Styles:", multiple_font_style)
+    # print("Font Sizes:", font_sizes)
+    # print("Multiple Font Sizes:", multiple_font_size)
+
+    resume_text = extract_full_text(pdf_bytes)
+    print(f"✅ Extracted Resume Text (first 500 chars): {resume_text[:50]}")
+
     # save outputs to a file
     output_data = {
         "action_words": action_words,
@@ -148,7 +161,13 @@ if __name__ == "__main__":
         "filler_words": filler_words,
         "total_filler_words": total_filler_words,
         "all_filler_words": all_filler_words,
-        "passive_voice_constructions": voice
+        "passive_voice_constructions": voice,
+        # "font_styles": font_styles,
+        # "standard_font_style_flag": standard_font_style_flag,
+        # "multiple_font_style": multiple_font_style,
+        # "font_sizes": font_sizes,
+        # "multiple_font_size": multiple_font_size
     }
+
     with open(OUTPUT_FILE_PATH, "w") as f:
         json.dump(output_data, f, indent=4)

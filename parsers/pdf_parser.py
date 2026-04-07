@@ -1,5 +1,6 @@
 from urllib.parse import urlparse
 import boto3
+import fitz
 
 # Converts PDF URL to bytes for processing
 def fetch_pdf_from_s3(pdf_url: str, aws_access_key: str, aws_secret_key: str) -> bytes:
@@ -22,6 +23,16 @@ def fetch_pdf_from_s3(pdf_url: str, aws_access_key: str, aws_secret_key: str) ->
 def load_local_pdf(pdf_path: str) -> bytes:
     with open(pdf_path, "rb") as f:
         return f.read()
+
+def extract_full_text(pdf_bytes: bytes) -> str:
+    text = ""
+
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    for page in doc:
+        text += page.get_text("text") + "\n"
+
+    doc.close()
+    return text.strip()
     
 if __name__ == "__main__":
 
