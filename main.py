@@ -7,6 +7,7 @@ from extraction.headings import get_headings
 from parsers.yolo_parser import LayoutParser
 from modules.information import *
 # from modules.presentation import *
+from modules.personal_details import *
 from groq_utils.prompts import *
 from config.settings import *
 import json
@@ -145,7 +146,23 @@ if __name__ == "__main__":
     # print("Multiple Font Sizes:", multiple_font_size)
 
     resume_text = extract_full_text(pdf_bytes)
-    print(f"✅ Extracted Resume Text (first 500 chars): {resume_text[:50]}")
+    print(f"✅ Extracted Resume Text (first 50 chars): {resume_text[:50]}")
+
+    # PERSONAL DETAILS
+    phones, phones1, phones2, all_phones = get_phones(resume_text)
+    print("Phone Numbers (E164 format):", phones)
+    print("Phone Numbers (Regex 1):", phones1)
+    print("Phone Numbers (Regex 2):", phones2)
+    print("All Phone Numbers:", all_phones)
+
+    reg_Phone = get_Phones(resume_text)
+    print("Phone Numbers (Regex 3):", reg_Phone)
+
+    email_finderSet =  get_emails(resume_text) 
+
+    url,linkedIn_flag,url_flag =  get_url(pdf_bytes)
+
+    images = check_Images(pdf_bytes)
 
     # save outputs to a file
     output_data = {
@@ -167,6 +184,13 @@ if __name__ == "__main__":
         # "multiple_font_style": multiple_font_style,
         # "font_sizes": font_sizes,
         # "multiple_font_size": multiple_font_size
+        "phone_numbers": all_phones,
+        "reg_Phone": reg_Phone,
+        "email_finderSet": list(email_finderSet),
+        "url": url,
+        "linkedIn_flag": linkedIn_flag,
+        "url_flag": url_flag,
+        "images_found": images
     }
 
     with open(OUTPUT_FILE_PATH, "w") as f:
