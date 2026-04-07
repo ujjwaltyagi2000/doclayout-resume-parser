@@ -17,6 +17,7 @@ Status: Working ✅
 from doclayout_yolo import YOLOv10
 # from resuscan_fonts import get_headings, get_heading_font_sizes  # Added get_heading_font_sizes
 from groq_utils.resuscan_groq import filter_body_content, filter_headers_with_groq, get_standard_headings_map
+from config.settings import *
 from urllib.parse import urlparse
 from collections import defaultdict
 
@@ -30,7 +31,7 @@ import uuid
 # =========================
 # Global model (loaded once per container)
 # =========================
-MODEL_PATH = "doclayout_yolo_doclaynet_imgsz1120_docsynth_pretrain.pt"
+# MODEL_PATH = "doclayout_yolo_doclaynet_imgsz1120_docsynth_pretrain.pt"
 IS_LAMBDA = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
 DEFAULT_OUTPUT_DIR = "/tmp" if IS_LAMBDA else os.getcwd()
 MODEL = YOLOv10(MODEL_PATH)

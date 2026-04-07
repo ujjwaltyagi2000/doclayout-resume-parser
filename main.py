@@ -5,6 +5,7 @@ from extraction.section_builder import SectionBuilder
 from extraction.headings import get_headings
 from parser.yolo_parser import LayoutParser
 from groq_utils.prompts import *
+from config.settings import *
 import json
 import os
 # from groq_utils.resuscan_groq import filter_body_content, filter_headers_with_groq
@@ -89,6 +90,9 @@ if __name__ == "__main__":
     builder = SectionBuilder(cleaned_headers)
     sections = builder.build(results["blocks"])
 
-    with open("sections_output.json", "w") as f:
+    print(f"📦 Sections: {list(sections.keys())}")
+    with open(SECTIONS_OUPUT_FILE_PATH, "w") as f:
         json.dump(sections, f, indent=4)
+
+    print(f"💾 Section building complete. Sections saved to {SECTIONS_OUPUT_FILE_PATH}")
     # print(f"📦 Sections: {list(sections.keys())}")

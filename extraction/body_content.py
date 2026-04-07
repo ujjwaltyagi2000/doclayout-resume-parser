@@ -1,3 +1,9 @@
+"""
+
+Script to filter out body content from a PDF using font size as a heuristic. It identifies the most common font size as the body text and extracts lines of text that do not match this font size, which are likely to be headings or other non-body content.
+
+"""
+
 import pathlib
 from typing import (
     Any,

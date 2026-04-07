@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 class SectionBuilder:
     def __init__(self, cleaned_headers):
         # Normalize headers once

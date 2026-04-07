@@ -3,7 +3,7 @@ import os
 import uuid
 from doclayout_yolo import YOLOv10
 
-MODEL_PATH = "doclayout_yolo_doclaynet_imgsz1120_docsynth_pretrain.pt"
+MODEL_PATH = "model/doclayout_yolo_doclaynet_imgsz1120_docsynth_pretrain.pt"
 
 class LayoutParser:
     def __init__(self, model_path=MODEL_PATH, dpi=300, conf=0.15):
