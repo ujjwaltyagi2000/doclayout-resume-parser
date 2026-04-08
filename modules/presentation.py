@@ -1,12 +1,8 @@
 from pdfminer.layout import LTTextContainer, LTChar, LTLine, LTAnno, LAParams
+from webcolors import CSS3_HEX_TO_NAMES, hex_to_rgb
 from pdfminer.high_level import extract_pages
 from scipy.spatial import KDTree
 from io import BytesIO
-from webcolors import (
-    CSS3_HEX_TO_NAMES,
-    hex_to_rgb,
-)
-
 
 def get_maxSize_words(pdf_file):
     try:

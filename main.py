@@ -6,7 +6,7 @@ from extraction.section_builder import SectionBuilder
 from extraction.headings import get_headings
 from parsers.yolo_parser import LayoutParser
 from modules.information import *
-# from modules.presentation import *
+from modules.presentation import *
 from modules.personal_details import *
 from groq_utils.prompts import *
 from config.settings import *
@@ -137,13 +137,13 @@ if __name__ == "__main__":
     print("Passive Voice Constructions:", voice)
 
 
-    # # PRESENTATION MENU METRICS
-    # font_styles,standard_font_style_flag,multiple_font_style,font_sizes,multiple_font_size = get_font_style_size(pdf_bytes)
-    # print("Font Styles:", font_styles)
-    # print("Standard Font Style Flag:", standard_font_style_flag)
-    # print("Multiple Font Styles:", multiple_font_style)
-    # print("Font Sizes:", font_sizes)
-    # print("Multiple Font Sizes:", multiple_font_size)
+    # PRESENTATION MENU METRICS
+    font_styles,standard_font_style_flag,multiple_font_style,font_sizes,multiple_font_size = get_font_style_size(pdf_bytes)
+    print("Font Styles:", font_styles)
+    print("Standard Font Style Flag:", standard_font_style_flag)
+    print("Multiple Font Styles:", multiple_font_style)
+    print("Font Sizes:", font_sizes)
+    print("Multiple Font Sizes:", multiple_font_size)
 
     resume_text = extract_full_text(pdf_bytes)
     print(f"✅ Extracted Resume Text (first 50 chars): {resume_text[:50]}")
@@ -159,11 +159,16 @@ if __name__ == "__main__":
     print("Phone Numbers (Regex 3):", reg_Phone)
 
     email_finderSet =  get_emails(resume_text) 
+    print("Email Addresses:", email_finderSet)
 
     url,linkedIn_flag,url_flag =  get_url(pdf_bytes)
+    print("URLs:", url)
+    print("LinkedIn Flag:", linkedIn_flag)
+    print("URL Flag:", url_flag)
 
     images = check_Images(pdf_bytes)
-
+    print("Images Found:", images)
+    
     # save outputs to a file
     output_data = {
         "action_words": action_words,
@@ -179,11 +184,11 @@ if __name__ == "__main__":
         "total_filler_words": total_filler_words,
         "all_filler_words": all_filler_words,
         "passive_voice_constructions": voice,
-        # "font_styles": font_styles,
-        # "standard_font_style_flag": standard_font_style_flag,
-        # "multiple_font_style": multiple_font_style,
-        # "font_sizes": font_sizes,
-        # "multiple_font_size": multiple_font_size
+        "font_styles": font_styles,
+        "standard_font_style_flag": standard_font_style_flag,
+        "multiple_font_style": multiple_font_style,
+        "font_sizes": font_sizes,
+        "multiple_font_size": multiple_font_size,
         "phone_numbers": all_phones,
         "reg_Phone": reg_Phone,
         "email_finderSet": list(email_finderSet),

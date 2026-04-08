@@ -19,7 +19,7 @@ dependencies = [
     "pymupdf>=1.27.2.2",
     "python-dotenv>=1.2.2",
     "spacy>=3.8.14",
-    "webcolors>=25.10.0",
+    "webcolors==1.13",
 ]
 
 [tool.uv.sources]
