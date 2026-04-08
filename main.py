@@ -5,9 +5,10 @@ from extraction.body_content import filter_body_content
 from extraction.section_builder import SectionBuilder 
 from extraction.headings import get_headings
 from parsers.yolo_parser import LayoutParser
-from modules.information import *
-from modules.presentation import *
 from modules.personal_details import *
+from modules.competencies import *
+from modules.presentation import *
+from modules.information import *
 from groq_utils.prompts import *
 from config.settings import *
 import json
@@ -148,7 +149,7 @@ if __name__ == "__main__":
     resume_text = extract_full_text(pdf_bytes)
     print(f"✅ Extracted Resume Text (first 50 chars): {resume_text[:50]}")
 
-    # PERSONAL DETAILS
+    # PERSONAL DETAILS MENU METRICS
     phones, phones1, phones2, all_phones = get_phones(resume_text)
     print("Phone Numbers (E164 format):", phones)
     print("Phone Numbers (Regex 1):", phones1)
@@ -168,7 +169,19 @@ if __name__ == "__main__":
 
     images = check_Images(pdf_bytes)
     print("Images Found:", images)
-    
+
+    # COMPETENCIES MENU METRICS
+
+    finalBullet,Bullets_Total,standard_bullet_flag= get_bullets(resume_text)
+    print("Bullets Found:", finalBullet)
+    print("Total Bullets:", Bullets_Total)
+    print("Standard Bullet Flag:", standard_bullet_flag)
+
+    ats_date =  getATS_dates(resume_text)
+    print("ATS Dates Found:", ats_date)
+    dates_nonAts =  get_nonATSdates(resume_text)
+    print("Non ATS Dates Found:", dates_nonAts)
+
     # save outputs to a file
     output_data = {
         "action_words": action_words,
@@ -195,7 +208,12 @@ if __name__ == "__main__":
         "url": url,
         "linkedIn_flag": linkedIn_flag,
         "url_flag": url_flag,
-        "images_found": images
+        "images_found": images,
+        "finalBullet": finalBullet,
+        "Bullets_Total": Bullets_Total,
+        "standard_bullet_flag": standard_bullet_flag,
+        "ats_date": ats_date,
+        "dates_nonAts": dates_nonAts
     }
 
     with open(FINAL_OUTPUT_FILE_PATH, "w") as f:
