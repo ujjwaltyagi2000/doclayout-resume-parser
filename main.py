@@ -40,14 +40,13 @@ def process_resume(pdf_bytes):
 
 if __name__ == "__main__":
 
-    # For local testing
-    
+    # For local testing    
     # convert local PDF to bytes
-    pdf_path = "Puunita Chaturvedi.pdf"
-    pdf_bytes = load_local_pdf(pdf_path)
+    # pdf_path = "Puunita Chaturvedi.pdf"
+    # pdf_bytes = load_local_pdf(pdf_path)
     
     # For S3 PDF
-    pdf_bytes = fetch_pdf_from_s3(
+    pdf_bytes, pdf_file2 = fetch_pdf_from_s3(
         "https://local-job-match-pro.s3.ap-south-2.amazonaws.com/e9168491d6ec8e5c0fcdaced9072de5b",
         os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
         os.getenv("AWS_SECRET_KEY")   #
@@ -188,6 +187,27 @@ if __name__ == "__main__":
     clean_measurable =  get_measurableUpdated(resume_text,finalBullet,measurable,all_phones,dates)
     print("Clean Measurable Strings:", clean_measurable)
 
+    skills,Skills_Total =  extract_skills(resume_text)
+    print("Extracted Skills:", skills)
+    print("Total Skills Extracted:", Skills_Total)
+
+    tables=get_tables(pdf_bytes)
+    tables2=get_tables2(pdf_bytes)
+    tables_flag=0
+    if(tables=="table" and tables2 == "table"):
+        tables_flag=1
+    if(tables=="table"):
+        tables_flag=1
+    print("Tables Found (Method 1):", tables)
+    print("Tables Found (Method 2):", tables2)
+    print("Tables Flag:", tables_flag)
+
+    file_size_kb,file_type,flag_file_size= get_fileDetails(pdf_file2)
+    print("File Size (KB):", file_size_kb)
+    print("File Type:", file_type)
+    print("File Size Flag (<=500KB):", flag_file_size)
+
+
     # save outputs to a file
     output_data = {
         "action_words": action_words,
@@ -221,7 +241,15 @@ if __name__ == "__main__":
         "ats_date": ats_date,
         "dates_nonAts": dates_nonAts,
         "measurable_ner": measurable,
-        "clean_measurable": clean_measurable
+        "clean_measurable": clean_measurable,
+        "skills": skills,
+        "Skills_Total": Skills_Total,
+        "tables": tables,
+        "tables2": tables2,
+        "tables_flag": tables_flag,
+        "file_size_kb": file_size_kb,
+        "file_type": file_type,
+        "flag_file_size": flag_file_size
     }
 
     with open(FINAL_OUTPUT_FILE_PATH, "w") as f:

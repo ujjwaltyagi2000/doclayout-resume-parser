@@ -15,9 +15,11 @@ def fetch_pdf_from_s3(pdf_url: str, aws_access_key: str, aws_secret_key: str) ->
         aws_secret_access_key=aws_secret_key,
         region_name=region
     )
+    
+    response = s3.get_object(Bucket=bucket_name, Key=key)  # full object
+    pdf_bytes = response["Body"].read() 
 
-    response = s3.get_object(Bucket=bucket_name, Key=key)
-    return response["Body"].read()
+    return pdf_bytes, response 
 
 # converts local PDF to bytes for processing
 def load_local_pdf(pdf_path: str) -> bytes:

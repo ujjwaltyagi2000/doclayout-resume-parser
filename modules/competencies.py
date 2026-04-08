@@ -1,7 +1,11 @@
 from config.settings import *
 import en_core_web_sm
 nlp = en_core_web_sm.load()
+from io import BytesIO
 import pandas as pd
+import pdfplumber
+import tabula
+import io
 import re
 
 def get_bullets(text):
@@ -464,3 +468,107 @@ def get_measurableUpdated(text,finalBullet,measurable,phone_all1,dates):
     except Exception as e:
         print("Measurable Updated Cleaning",e)
         return []
+    
+def extract_skills(input_text):
+
+    try:  
+        # file_path = "https://s3.ap-south-1.amazonaws.com/mployee.me/keywords_list/Keywords.xlsx"
+        dataframe1 = pd.read_excel(KEYWORDS_EXCEL_FILE_PATH,usecols='A', header=None)
+    
+        SKILLS_DB = dataframe1.values.tolist()
+        topics_flat1 = [topic for sublist in SKILLS_DB for topic in sublist]
+        topics_flat =  [x.lower() for x in topics_flat1]
+        flag_skill = 0
+        stop_words = set(nltk.corpus.stopwords.words('english'))
+        word_tokens = nltk.tokenize.word_tokenize(input_text)
+    
+        # remove the stop words
+        filtered_tokens = [w for w in word_tokens if w not in stop_words]
+    
+        # remove the punctuation
+        filtered_tokens = [w for w in word_tokens if w.isalpha()]
+    
+        # generate bigrams and trigrams (such as artificial intelligence)
+        bigrams_trigrams = list(map(' '.join, nltk.everygrams(filtered_tokens, 2, 3)))
+        
+        # we create a set to keep the results in.  
+        found_skills = set()
+        
+    
+        # we search for each token in our skills database
+        for token in filtered_tokens:
+            
+            if token.lower() in topics_flat:
+                found_skills.add(token.lower())
+
+            
+        # we search for each bigram and trigram in our skills database
+        for ngram in bigrams_trigrams:
+            if ngram.lower() in topics_flat:
+                found_skills.add(ngram.lower())
+
+        
+        Skills_Total = len(found_skills)
+    
+
+        return list(found_skills),Skills_Total
+    except Exception as e:
+        print("Extract_skills ",str(e))
+        
+        return [],0
+    
+def get_tables(pdf_file):
+    try: 
+        with pdfplumber.open(BytesIO(pdf_file)) as f:
+            for i in f.pages:
+                tables = i.extract_tables()
+                if tables:
+                    return "table"
+        
+        # If no tables are found in any of the pages, return None
+        return "no table"
+    except Exception as e:
+        print("*********tables**************")
+        print(str(e))
+        return ""
+
+def get_tables2(pdf_file):
+    try: 
+        
+        pdf_path = BytesIO(pdf_file)
+        # specify the path to your PDF file and the page number containing the table
+        
+        # pdf_path="resumes/ARUN THOTA RESUME - ARUN THOTA.pdf"
+        # iterate over all the pages in the PDF and extract the tables
+        for page_number in range(1, len(tabula.read_pdf(pdf_path, pages='all')) + 1):
+            # print("hello")
+            table = tabula.read_pdf(pdf_path, pages=page_number)
+            if table is not None:
+                # print(f"Table on page {page_number}:")
+                # print(table)
+                return ("table");
+            else:
+                return("no table")
+        return("no table")
+    except Exception as e:
+        print("**************tables*************************")
+        print(str(e))
+        return ""
+    
+def get_fileDetails(pdf_file):
+    try: 
+        
+        file_size = pdf_file['ContentLength']
+        file_size_kb = round(file_size/1024)
+        
+        flag_file_size = 1 if file_size_kb > 2*1024 else 0
+
+        file_type = pdf_file['ContentType']
+
+        
+        return file_size_kb,file_type,flag_file_size
+    
+    except Exception as e:
+        print("***********file details*************")
+        print(str(e))
+        return 0,'',0
