@@ -1,4 +1,7 @@
-
+from config.settings import *
+import en_core_web_sm
+nlp = en_core_web_sm.load()
+import pandas as pd
 import re
 
 def get_bullets(text):
@@ -251,4 +254,213 @@ def get_nonATSdates(text):
         return list(res1)
     except Exception as e:
         print("get_nonATSdates ",e)
+        return []
+    
+def get_namedEntityMeasurable(text):
+    try:
+        print("here at mesaurableee")
+        mesurable=[]
+        new_textx = re.findall(r"([\d]{1,4}(million|billion|trillion))",text)
+        if len(new_textx) > 0:
+            for i in new_textx:
+                mesurable.add(i[0])
+
+
+        
+        #preprocessing data
+        text = text.replace('\n'," ")
+        text = text.replace('('," ")
+        pattern = r"\s[0-9]\)+\s?"
+        new_text= re.sub(pattern, "", text)
+        pattern1 = r"[0-9][.][a-zA-Z]"
+        pattern2 = r"\b[0-9]{1,4}[a-zA-Z]\b"
+        pattern3 = r"[a-zA-Z][.][0-9]"
+        new_text0 = re.sub(pattern1, "",  new_text)
+    
+        new_text1= re.sub(pattern2, "",  new_text0)
+        new_text2= re.sub(pattern3, "",  new_text1)
+
+        new_text2 = new_text2.replace(')'," ")
+        # Process the text with Spacy
+
+        doc = nlp(new_text2)
+
+        # Iterate through named entities
+        for entity in doc.ents:
+        
+
+            if (entity.label_ == 'PERCENT' or entity.label_ == 'MONEY' or entity.label_ == 'CARDINAL' or entity.label_ == 'ORDINAL' or entity.label_ == 'QUANTITY'):
+            
+                mesurable.append(entity.text)
+        
+        return mesurable
+    except Exception as e:
+        print("get_namedEntityMeasurable ",e)
+        measurable=[]
+        return measurable
+
+def remove_duplicates(input_list):
+    result = []
+    for i, s1 in enumerate(input_list):
+        found_duplicate = False
+        for j, s2 in enumerate(input_list[i+1:], start=i+1):
+            if s1 in s2 or s2 in s1:  
+                found_duplicate = True
+                break
+        if not found_duplicate:
+            result.append(s1)
+    return result
+
+
+
+def find_words(input_list, search_list):
+
+
+    for i in range(len(input_list)):
+    
+        list_input = [word.rstrip('.') for word in input_list[i:i+len(search_list)]]
+        list_input = [word.lstrip('(') for word in list_input]
+        list_input = [word.rstrip(')') for word in list_input]
+        list_input = [word.rstrip(',') for word in list_input]
+
+        if list_input == search_list:
+    
+            max_context = min(i, 3) 
+            min_context = min(len(input_list) - i - len(search_list), 3) 
+            output_string = ""
+            
+
+            for j in range(max_context):
+                output_string += input_list[i - max_context + j] + " "
+
+            output_string += " ".join(search_list) + " "
+            for j in range(min_context):
+                output_string += input_list[i + len(search_list) + j] + " "
+
+            return output_string.strip()
+
+    return ""
+
+def get_measurableUpdated(text,finalBullet,measurable,phone_all1,dates):
+    try:
+    
+        finalBullet_list  = list(finalBullet)
+        phone_all1_list = list(phone_all1)
+        measurable_updated = [x for x in measurable if x not in finalBullet_list]
+        measurable_updated = [x for x in measurable_updated if x not in phone_all1_list]
+        measurable_updated = [x for x in measurable_updated if x not in dates]
+        measurable_updated = [x for x in measurable_updated if "#" not in x]
+        measurable_updated = [x for x in measurable_updated if '.com' not in x]
+        measurable_updated = [x for x in measurable_updated if '.in' not in x]
+        measurable_updated = [x for x in measurable_updated if '.io' not in x]
+        
+        pattern2 =  r"\s[0-9]{1,2}\.\s+"
+        bullets2 = re.findall(pattern2,text)
+        bullet2_new = []
+        for x in bullets2:
+            s = x.replace('\n','')
+            z = s.replace('\x0c','')
+            bullet2_new.append(z.replace(' ',''))
+    
+        measurable_updated = [x for x in measurable_updated if x not in bullet2_new]
+
+        list1 = ['1','2','3','4','5','6']
+        measurable_updated = [x for x in measurable_updated if x not in list1]
+        measurable_updated = [x for x in measurable_updated if '\uf0fc' not in x]
+        class1 = ['10th','12th','10TH','12TH']
+        measurable_updated_new = []  
+    
+        for i in measurable_updated:
+        
+            if i.isdigit() and len(i) >= 6:
+        
+                continue
+            elif '/' in i:
+        
+                pattern = r"([\d]{1,2}\s?[/]\s?[\d]{4})"
+                x = re.findall(pattern,i)
+            
+                if len(x)>0:
+            
+                    continue
+                else:
+                    measurable_updated_new.append(i)
+                    continue
+
+            elif i in class1:
+        
+                continue
+
+            elif len(i) >=  15:
+            
+                continue
+        
+            else:
+        
+                measurable_updated_new.append(i)
+    
+        measurable_updated_change = []
+        # file_path = 'Measurable.xlsx'
+        dataframe1 = pd.read_excel(MEASURABLES_EXCEL_FILE_PATH,usecols='A')
+        # dataframe1 = pd.read_excel('Named Entity.xlsx',usecols='A')
+        SKILLS_DB = dataframe1.values.tolist()
+        topics_flat1 = [topic for sublist in SKILLS_DB for topic in sublist]
+        topics_flat =  [x.lower() for x in topics_flat1]
+
+        flag = 1
+    
+        for i in measurable_updated_new:
+            for j in i:
+                if j.lower() >= 'a' and j.lower() <= 'z':
+                    continue
+                else:
+        
+                    flag = 0
+                    break
+            if flag == 0:
+        
+                flag = 1
+                measurable_updated_change.append(i)
+            else:
+        
+                if i.lower() in topics_flat:
+            
+                    measurable_updated_change.append(i.lower())
+
+        measurable_updated_change_new = []        
+        new_ = re.findall(r"([\d]{1,2}\s(JANUARY|FEBRUARY|MARCH|APRIL|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC))",text)
+        new = [] 
+        if len(new_) > 0:
+            for i in new_:
+                new.append(i[0])
+
+        measurable_updated_change_new = [x for x in measurable_updated_change if x not in new]  
+        measurable_updated_change_new1 = [elem for elem in measurable_updated_change_new if not re.search(r"[\d]\s?[-–]", elem)]
+        new1_ = re.findall(r"\d+\+",text)
+        measurable_string = []
+        if len(new1_) > 0:
+            measurable_updated_change_new1.extend(new1_)
+        final_ans=  set(measurable_updated_change_new1)
+        
+        
+        measure_dict = {}
+        if len(final_ans) > 0:
+            for i in final_ans:
+                found_matches = find_words(text.split(),i.split())
+                measure_dict[i] = found_matches
+                if found_matches:
+                    measurable_string.append(found_matches)
+        
+        measurable_output = remove_duplicates(measurable_string)
+        final_measurable = []
+        for value in measurable_output:
+            for key, val in measure_dict.items():
+                if val == value:
+                    final_measurable.append(key)
+        
+        # print(measure_dict)
+        # print(final_measurable)
+        return list(final_measurable)
+    except Exception as e:
+        print("Measurable Updated Cleaning",e)
         return []

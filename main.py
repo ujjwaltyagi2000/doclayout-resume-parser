@@ -181,6 +181,12 @@ if __name__ == "__main__":
     print("ATS Dates Found:", ats_date)
     dates_nonAts =  get_nonATSdates(resume_text)
     print("Non ATS Dates Found:", dates_nonAts)
+    dates = ats_date + dates_nonAts
+
+    measurable= get_namedEntityMeasurable(resume_text)
+    print("Measurable Named Entities:", measurable)
+    clean_measurable =  get_measurableUpdated(resume_text,finalBullet,measurable,all_phones,dates)
+    print("Clean Measurable Strings:", clean_measurable)
 
     # save outputs to a file
     output_data = {
@@ -213,7 +219,9 @@ if __name__ == "__main__":
         "Bullets_Total": Bullets_Total,
         "standard_bullet_flag": standard_bullet_flag,
         "ats_date": ats_date,
-        "dates_nonAts": dates_nonAts
+        "dates_nonAts": dates_nonAts,
+        "measurable_ner": measurable,
+        "clean_measurable": clean_measurable
     }
 
     with open(FINAL_OUTPUT_FILE_PATH, "w") as f:
