@@ -1,13 +1,24 @@
 import os
 import nltk
 
-DATA_DIR = os.path.join(os.getcwd(), "data")
-
 MODEL_PATH = "model/doclayout_yolo_doclaynet_imgsz1120_docsynth_pretrain.pt"
-SECTIONS_OUPUT_FILE_PATH = "sections_output.json"
-STANDARD_SECTIONS_OUTPUT_FILE_PATH = "standard_sections_output.json"
-OUTPUT_FILE_PATH = "analysis_output.json"
 nltk.data.path.append("nltk_data")
+
+DATA_DIR = os.path.join(os.getcwd(), "data")
+JSON_DIR = os.path.join(os.getcwd(), "json")
+
+for dir_path in [DATA_DIR, JSON_DIR]:
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+
+SECTIONS_OUTPUT_FILE_NAME = "sections_output.json"
+STANDARD_SECTIONS_OUTPUT_FILE_NAME = "standard_sections_output.json"
+FINAL_OUTPUT_FILE_NAME = "analysis_output.json"
+
+SECTIONS_OUTPUT_FILE_PATH = os.path.join(JSON_DIR, SECTIONS_OUTPUT_FILE_NAME)
+STANDARD_SECTIONS_OUTPUT_FILE_PATH = os.path.join(JSON_DIR, STANDARD_SECTIONS_OUTPUT_FILE_NAME)
+FINAL_OUTPUT_FILE_PATH = os.path.join(JSON_DIR, FINAL_OUTPUT_FILE_NAME)
 
 # Excel Sheets
 ACTION_WORDS_EXCEL_FILE_NAME = "ActionWords.xlsx"

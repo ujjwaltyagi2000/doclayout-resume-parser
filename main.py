@@ -97,10 +97,10 @@ if __name__ == "__main__":
     sections = builder.build(results["blocks"])
 
     print(f"📦 Sections: {list(sections.keys())}")
-    with open(SECTIONS_OUPUT_FILE_PATH, "w") as f:
+    with open(SECTIONS_OUTPUT_FILE_PATH, "w") as f:
         json.dump(sections, f, indent=4)
 
-    print(f"💾 Section building complete. Sections saved to {SECTIONS_OUPUT_FILE_PATH}")
+    print(f"💾 Section building complete. Sections saved to {SECTIONS_OUTPUT_FILE_PATH}")
     print(f"📦 Sections: {list(sections.keys())}")
 
     standard_sections = map_content_to_standard_header(sections, standard_headings_map)
@@ -198,5 +198,5 @@ if __name__ == "__main__":
         "images_found": images
     }
 
-    with open(OUTPUT_FILE_PATH, "w") as f:
+    with open(FINAL_OUTPUT_FILE_PATH, "w") as f:
         json.dump(output_data, f, indent=4)
