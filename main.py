@@ -3,12 +3,14 @@ from parsers.pdf_parser import load_local_pdf, fetch_pdf_from_s3, extract_full_t
 from extraction.section_mapper import map_content_to_standard_header
 from extraction.body_content import filter_body_content
 from extraction.section_builder import SectionBuilder 
+from evaluation.score import calculate_resume_score
 from extraction.headings import get_headings
 from parsers.yolo_parser import LayoutParser
 from modules.personal_details import *
 from modules.competencies import *
 from modules.presentation import *
 from modules.information import *
+from modules.misc import *
 from groq_utils.prompts import *
 from config.settings import *
 import json
@@ -207,6 +209,17 @@ if __name__ == "__main__":
     print("File Type:", file_type)
     print("File Size Flag (<=500KB):", flag_file_size)
 
+    # MISCELLANEOUS MENU METRICS
+
+    max_size, content_size_flag = get_maxSize_words(pdf_bytes)
+    print("Max Font Size:", max_size)
+    print("Content Size Flag (1 if max font size is 10, 11, or 12):", content_size_flag)
+
+    font_colors,font_colors_Total,standard_color_flag= get_font_color(pdf_bytes)
+    print("Font Colors Found:", font_colors)
+    print("Total Font Colors Found:", font_colors_Total)
+    print("Standard Color Flag (1 if only black or dark colors found):", standard_color_flag)
+
 
     # save outputs to a file
     output_data = {
@@ -249,8 +262,56 @@ if __name__ == "__main__":
         "tables_flag": tables_flag,
         "file_size_kb": file_size_kb,
         "file_type": file_type,
-        "flag_file_size": flag_file_size
+        "flag_file_size": flag_file_size,
+        "max_size": max_size,
+        "content_size_flag": content_size_flag,
+        "font_colors": font_colors,
+        "font_colors_Total": font_colors_Total,
+        "standard_color_flag": standard_color_flag
     }
 
     with open(FINAL_OUTPUT_FILE_PATH, "w") as f:
         json.dump(output_data, f, indent=4)
+
+    # calculating final score
+
+    # resume_score, score_array = calculate_resume_score(
+    #     standard_font_style_flag=standard_font_style_flag,
+    #     multiple_font_style=multiple_font_style,
+    #     multiple_font_size=multiple_font_size,
+    #     content_size_flag=content_size_flag,
+    #     font_colors_Total=font_colors_Total,
+    #     standard_color_flag=standard_color_flag,
+    #     actionwords_total=actionwords_total,
+    #     actionwords_total_negative=actionwords_total_negative,
+    #     total_repeated_actionwords_negative=total_repeated_actionwords_negative,
+    #     Bullets_Total=Bullets_Total,
+    #     standard_bullet_flag=standard_bullet_flag,
+    #     total_repeated_actionwords=total_repeated_actionwords,
+    #     ats_date=ats_date,
+    #     dates_nonAts=dates_nonAts,
+    #     clean_measurable=clean_measurable,
+    #     total_word_count=total_word_count,
+    #     email_finderSet=email_finderSet,
+    #     phonenumbers_finderSet=phonenumbers_finderSet,
+    #     images=images,
+    #     linkedIn_flag=linkedIn_flag,
+    #     pages_count=pages_count,
+    #     personalPronouns=personalPronouns,
+    #     tables_flag=tables_flag,
+    #     Work_Project_Headings=Work_Project_Headings,
+    #     EduSkill_Headings=EduSkill_Headings,
+    #     NRlength=NRlength,
+    #     ORlength_db=ORlength_db,
+    #     Skills_Total=Skills_Total,
+    #     standard_match_headings_count=standard_match_headings_count,
+    #     sectionMapCount=sectionMapCount,
+    #     phone_all1=phone_all1,
+    #     actualHeadingsCount=actualHeadingsCount,
+    #     experience=experience,
+    #     fillerwords_total=fillerwords_total,
+    #     output_voice=output_voice,
+    #     repeated_words=repeated_words,
+    #     file_name=file_name,
+    #     name_output=name_output
+    # )
