@@ -175,3 +175,13 @@ def get_font_color(pdf_file):
         standard_color_flag = 0
         font_colors = set()
         return list(font_colors),font_colors_Total,standard_color_flag
+
+def get_totalWordCount(text):
+    try: 
+        word_list = text.split()
+        words_list_final = [s for s in word_list if len(s) != 1 or s.isdigit() or s.isalpha() or s == '|' or s == '/' or s == '-' or s == ':' or s == ';']
+        total_word_count = len(words_list_final)
+        return total_word_count
+    except Exception as e:
+        print("get_totalWordCount ",e)
+        return 0

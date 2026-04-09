@@ -130,6 +130,11 @@ if __name__ == "__main__":
     print("Total Negative Action Words:", total_negative_action_words)
     print("All Negative Action Words:", all_negative_action_words)
 
+    frequencyList_negative,total_repeated_actionwords_negative,repeated_frequency_negative =  frequency_Action_words(all_negative_action_words)
+    print("Negative Action Words (appearing at least 3 times):", frequencyList_negative)
+    print("Total Negative Action Words:", total_repeated_actionwords_negative)
+    print("Repeated Frequency of Negative Action Words:", repeated_frequency_negative)
+
     filler_words, total_filler_words, all_filler_words = get_filler_words(experience_and_projects_content)
     print("Filler Words:", filler_words)
     print("Total Filler Words:", total_filler_words)
@@ -220,6 +225,8 @@ if __name__ == "__main__":
     print("Total Font Colors Found:", font_colors_Total)
     print("Standard Color Flag (1 if only black or dark colors found):", standard_color_flag)
 
+    total_word_count = get_totalWordCount(resume_text)
+    print("Total Word Count:", total_word_count)
 
     # save outputs to a file
     output_data = {
@@ -274,44 +281,43 @@ if __name__ == "__main__":
         json.dump(output_data, f, indent=4)
 
     # calculating final score
-
-    # resume_score, score_array = calculate_resume_score(
-    #     standard_font_style_flag=standard_font_style_flag,
-    #     multiple_font_style=multiple_font_style,
-    #     multiple_font_size=multiple_font_size,
-    #     content_size_flag=content_size_flag,
-    #     font_colors_Total=font_colors_Total,
-    #     standard_color_flag=standard_color_flag,
-    #     actionwords_total=actionwords_total,
-    #     actionwords_total_negative=actionwords_total_negative,
-    #     total_repeated_actionwords_negative=total_repeated_actionwords_negative,
-    #     Bullets_Total=Bullets_Total,
-    #     standard_bullet_flag=standard_bullet_flag,
-    #     total_repeated_actionwords=total_repeated_actionwords,
-    #     ats_date=ats_date,
-    #     dates_nonAts=dates_nonAts,
-    #     clean_measurable=clean_measurable,
-    #     total_word_count=total_word_count,
-    #     email_finderSet=email_finderSet,
-    #     phonenumbers_finderSet=phonenumbers_finderSet,
-    #     images=images,
-    #     linkedIn_flag=linkedIn_flag,
-    #     pages_count=pages_count,
-    #     personalPronouns=personalPronouns,
-    #     tables_flag=tables_flag,
-    #     Work_Project_Headings=Work_Project_Headings,
-    #     EduSkill_Headings=EduSkill_Headings,
-    #     NRlength=NRlength,
-    #     ORlength_db=ORlength_db,
-    #     Skills_Total=Skills_Total,
-    #     standard_match_headings_count=standard_match_headings_count,
-    #     sectionMapCount=sectionMapCount,
-    #     phone_all1=phone_all1,
-    #     actualHeadingsCount=actualHeadingsCount,
-    #     experience=experience,
-    #     fillerwords_total=fillerwords_total,
-    #     output_voice=output_voice,
-    #     repeated_words=repeated_words,
-    #     file_name=file_name,
-    #     name_output=name_output
-    # )
+    resume_score, score_array = calculate_resume_score(
+        standard_font_style_flag=standard_font_style_flag,
+        multiple_font_style=multiple_font_style,
+        multiple_font_size=multiple_font_size,
+        content_size_flag=content_size_flag,
+        font_colors_Total=font_colors_Total,
+        standard_color_flag=standard_color_flag,
+        actionwords_total=total_action_words,
+        actionwords_total_negative=total_negative_action_words,
+        total_repeated_actionwords_negative=total_frequent_action_words,
+        Bullets_Total=Bullets_Total,
+        standard_bullet_flag=standard_bullet_flag,
+        total_repeated_actionwords=total_frequent_action_words,
+        ats_date=ats_date,
+        dates_nonAts=dates_nonAts,
+        clean_measurable=clean_measurable,
+        total_word_count=total_word_count,
+        email_finderSet=email_finderSet,
+        # phonenumbers_finderSet=phonenumbers_finderSet,
+        # images=images,
+        # linkedIn_flag=linkedIn_flag,
+        # pages_count=pages_count,
+        # personalPronouns=personalPronouns,
+        # tables_flag=tables_flag,
+        # Work_Project_Headings=Work_Project_Headings,
+        # EduSkill_Headings=EduSkill_Headings,
+        # NRlength=NRlength,
+        # ORlength_db=ORlength_db,
+        # Skills_Total=Skills_Total,
+        # standard_match_headings_count=standard_match_headings_count,
+        # sectionMapCount=sectionMapCount,
+        # phone_all1=phone_all1,
+        # actualHeadingsCount=actualHeadingsCount,
+        # experience=experience,
+        # fillerwords_total=fillerwords_total,
+        # output_voice=output_voice,
+        # repeated_words=repeated_words,
+        # file_name=file_name,
+        # name_output=name_output
+    )
