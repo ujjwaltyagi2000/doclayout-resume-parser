@@ -10,7 +10,12 @@ from modules.personal_details import *
 from modules.competencies import *
 from modules.presentation import *
 from modules.information import *
-from modules.misc import *
+from utils.ngrams import frequent_dynamic_ngrams
+from utils.headings import get_headings
+from utils.names import *
+from utils.bold import get_bold
+from utils.document import *
+from utils.pronouns import *
 from groq_utils.prompts import *
 from config.settings import *
 import json
@@ -53,6 +58,9 @@ if __name__ == "__main__":
         os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
         os.getenv("AWS_SECRET_KEY")   #
     )
+    
+    experience = 3
+    file_name = "Ujjwal Tyagi.pdf"
 
     # pdf text
 
@@ -228,6 +236,35 @@ if __name__ == "__main__":
     total_word_count = get_totalWordCount(resume_text)
     print("Total Word Count:", total_word_count)
 
+    pages_count =  get_pageCount(pdf_bytes)
+    print("Total Pages in Resume:", pages_count)
+
+    personalPronouns = get_excel_pronouns(resume_text)
+    print("Personal Pronouns:", personalPronouns)
+
+    headings,subHeadings,notRequired_Heading,Work_Project_Headings,EduSkill_Headings,Other_Headings,Other_headings_db,sectionMap,sectionMapCount,standard_match_headings,standard_match_headings_count =  get_headings(pdf_bytes)
+    actualHeadingsCount = len(subHeadings)
+    NRlength = len(notRequired_Heading)
+    ORlength = len(Other_Headings)
+    ORlength_db=len(Other_headings_db)
+    print("Actual Headings Count:", actualHeadingsCount)
+    print("NRlength:", NRlength)
+    print("ORlength:", ORlength)
+    print("ORlength_db:", ORlength_db)
+
+    # REPEATED WORDS
+
+    extra_words = ['\uf0d8','\uf0b7',':','/','|']
+    combined_data = ats_date + dates_nonAts + all_phones + finalBullet + list(email_finderSet) + extra_words
+    combined_data = [word for sublist in combined_data for word in sublist.split()]
+    raw_data2 = get_bold(pdf_bytes)
+    repeated_words = frequent_dynamic_ngrams(raw_data2,combined_data)
+    print("Repeated Words (after removing combined data):", repeated_words) 
+
+    alloutput = detect_names_all(pdf_bytes,resume_text,extra_words)
+    name_output = get_finalise_names(alloutput)
+
+
     # save outputs to a file
     output_data = {
         "action_words": action_words,
@@ -239,6 +276,9 @@ if __name__ == "__main__":
         "negative_action_words": negative_action_words,
         "total_negative_action_words": total_negative_action_words,
         "all_negative_action_words": all_negative_action_words,
+        "frequencyList_negative": frequencyList_negative,
+        "total_repeated_actionwords_negative": total_repeated_actionwords_negative,
+        "repeated_frequency_negative": repeated_frequency_negative,
         "filler_words": filler_words,
         "total_filler_words": total_filler_words,
         "all_filler_words": all_filler_words,
@@ -274,7 +314,10 @@ if __name__ == "__main__":
         "content_size_flag": content_size_flag,
         "font_colors": font_colors,
         "font_colors_Total": font_colors_Total,
-        "standard_color_flag": standard_color_flag
+        "standard_color_flag": standard_color_flag,
+        "total_word_count": total_word_count,
+        "pages_count": pages_count,
+        "personalPronouns": personalPronouns
     }
 
     with open(FINAL_OUTPUT_FILE_PATH, "w") as f:
@@ -299,25 +342,28 @@ if __name__ == "__main__":
         clean_measurable=clean_measurable,
         total_word_count=total_word_count,
         email_finderSet=email_finderSet,
-        # phonenumbers_finderSet=phonenumbers_finderSet,
-        # images=images,
-        # linkedIn_flag=linkedIn_flag,
-        # pages_count=pages_count,
-        # personalPronouns=personalPronouns,
-        # tables_flag=tables_flag,
-        # Work_Project_Headings=Work_Project_Headings,
-        # EduSkill_Headings=EduSkill_Headings,
-        # NRlength=NRlength,
-        # ORlength_db=ORlength_db,
-        # Skills_Total=Skills_Total,
-        # standard_match_headings_count=standard_match_headings_count,
-        # sectionMapCount=sectionMapCount,
-        # phone_all1=phone_all1,
-        # actualHeadingsCount=actualHeadingsCount,
-        # experience=experience,
-        # fillerwords_total=fillerwords_total,
-        # output_voice=output_voice,
-        # repeated_words=repeated_words,
-        # file_name=file_name,
-        # name_output=name_output
+        phonenumbers_finderSet=phones,
+        images=images,
+        linkedIn_flag=linkedIn_flag,
+        pages_count=pages_count,
+        personalPronouns=personalPronouns,
+        tables_flag=tables_flag,
+        Work_Project_Headings=Work_Project_Headings,
+        EduSkill_Headings=EduSkill_Headings,
+        NRlength=NRlength,
+        ORlength_db=ORlength_db,
+        Skills_Total=Skills_Total,
+        standard_match_headings_count=standard_match_headings_count,
+        sectionMapCount=sectionMapCount,
+        phone_all1=all_phones,
+        actualHeadingsCount=actualHeadingsCount,
+        experience=experience,
+        fillerwords_total=total_filler_words,
+        output_voice=voice,
+        repeated_words=repeated_words,
+        file_name=file_name,
+        name_output=name_output
     )
+
+    print("📊 Final Resume Score:", resume_score)
+    print("📊 Final Resume Score Array:", score_array)

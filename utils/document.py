@@ -1,12 +1,12 @@
-from pdfminer.layout import LTTextContainer, LTChar, LTLine, LTAnno, LAParams
-from pdfminer.high_level import extract_pages
-from scipy.spatial import KDTree
+from pdfminer.layout import LTTextContainer, LTChar, LTAnno
 from webcolors import CSS3_HEX_TO_NAMES, hex_to_rgb
-    # CSS3_HEX_TO_NAMES,
-    # hex_to_rgb,
-# )
+from pdfminer.high_level import extract_pages
+from pdfminer.pdfdocument import PDFDocument
+from pdfminer.pdfparser import PDFParser
+from scipy.spatial import KDTree
+from config.settings import *
 from io import BytesIO
-import io
+
 
 def get_maxSize_words(pdf_file):
     try:
@@ -185,3 +185,19 @@ def get_totalWordCount(text):
     except Exception as e:
         print("get_totalWordCount ",e)
         return 0
+
+def get_pageCount(pdf_file):
+    try:  
+    
+        file_bytes = BytesIO(pdf_file)
+
+        # Count the number of pages in the PDF file
+        file_bytes.seek(0)  # Reset the file pointer to the beginning
+        parser = PDFParser(file_bytes)
+        document = PDFDocument(parser)
+        return len(document.catalog['Pages'].resolve()['Kids'])
+    except Exception as e:
+        print("*********page count*************")
+        print(str(e))
+        pages_count = 0
+        return pages_count
