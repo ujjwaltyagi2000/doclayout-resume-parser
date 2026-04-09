@@ -1,4 +1,18 @@
-def calculate_resume_score(standard_font_style_flag,multiple_font_style,multiple_font_size,content_size_flag,font_colors_Total,standard_color_flag,actionwords_total,actionwords_total_negative,total_repeated_actionwords_negative,Bullets_Total,standard_bullet_flag,total_repeated_actionwords,ats_date,dates_nonAts,clean_measurable,total_word_count,email_finderSet,phonenumbers_finderSet,images,linkedIn_flag,pages_count,personalPronouns,tables_flag,Work_Project_Headings,EduSkill_Headings,NRlength,ORlength_db,Skills_Total,standard_match_headings_count,sectionMapCount,phone_all1,actualHeadingsCount,experience,fillerwords_total,output_voice,repeated_words,file_name, name_output):
+def match_strings(string1, string2):
+    string1_lower = string1.lower()
+    string2_lower = string2.lower()
+
+
+    words1 = string1_lower.split()
+    words2 = string2_lower.split()
+
+    for word1 in words1:
+        for word2 in words2:
+            if word1 in word2 or word2 in word1:
+                return True
+    return False
+
+def calculate_resume_score(standard_font_style_flag,multiple_font_style,multiple_font_size,content_size_flag,font_colors_Total,standard_color_flag,actionwords_total,actionwords_total_negative,total_repeated_actionwords_negative,Bullets_Total,standard_bullet_flag,total_repeated_actionwords,ats_date,dates_nonAts,clean_measurable,total_word_count,email_finderSet,phonenumbers_finderSet,images,linkedIn_flag,pages_count,personalPronouns,tables_flag,Work_Project_Headings,EduSkill_Headings,NRlength,ORlength_db,Skills_Total,standard_match_headings_count,sectionMapCount,phone_all1,actualHeadingsCount,experience,fillerwords_total,output_voice,repeated_words,file_name, name_output, ORlength ):
     try:
     
     

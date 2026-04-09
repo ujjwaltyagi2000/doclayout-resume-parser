@@ -362,7 +362,8 @@ if __name__ == "__main__":
         output_voice=voice,
         repeated_words=repeated_words,
         file_name=file_name,
-        name_output=name_output
+        name_output=name_output,
+        ORlength=ORlength 
     )
 
     print("📊 Final Resume Score:", resume_score)
