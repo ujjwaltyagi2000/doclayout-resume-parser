@@ -217,11 +217,11 @@ def handler(event, context):
 
 if __name__ == "__main__":
 
-    pdf_file_path = "Puunita Chaturvedi.pdf"
+    # pdf_file_path = "Puunita Chaturvedi.pdf"
     # pdf_file_path = "resume.pdf"
     # pdf_file_path = "Ujjwal Tyagi.pdf"
     # pdf_file_path = "TANVI GAWALI CV.pdf"
-    # pdf_file_path = "Megha resume.pdf"
+    pdf_file_path = "resume/Megha resume.pdf"
 
     print(f"📁 File Name: {pdf_file_path}")
     pdf_file = load_local_pdf(pdf_file_path)
