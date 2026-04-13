@@ -4,7 +4,7 @@ from extraction.section_mapper import map_content_to_standard_header
 from extraction.body_content import filter_body_content
 from extraction.section_builder import SectionBuilder 
 from evaluation.score import calculate_resume_score
-from extraction.pointers import extract_first_words
+from extraction.pointers import *
 from extraction.headings import get_headings
 from parsers.yolo_parser import LayoutParser
 from modules.personal_details import *
@@ -133,28 +133,32 @@ if __name__ == "__main__":
     combined_list = exp_data.get("bullets", []) + proj_data.get("bullets", [])
 
     first_words = extract_first_words(combined_list)
+    print(f"🚀 First words extracted from bullets: \n{first_words}")
+    # print(first_words)
 
-    print(first_words)
+    action_words_result = analyze_first_words(first_words)
+    print(f"\n📃 Action Words Analysis Result: \n{action_words_result}")
+    print(action_words_result)
 
-    # ✅ Save to files
-    with open("experience_projects_text.txt", "w") as f:
-        f.write(experience_and_projects_content)
+    # # ✅ Save to files
+    # with open("experience_projects_text.txt", "w") as f:
+    #     f.write(experience_and_projects_content)
 
-    with open("experience_projects_bullets.txt", "w") as f:
-        for index, bullet in enumerate(combined_list):
-            f.write(f"[{index + 1}] {bullet}\n")
+    # with open("experience_projects_bullets.txt", "w") as f:
+    #     for index, bullet in enumerate(combined_list):
+    #         f.write(f"[{index + 1}] {bullet}\n")
 
-    # INFORMATION MENU METRICS
-    action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content)
+    # # INFORMATION MENU METRICS
+    # action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content)
 
-    print("Action Words:", action_words)
-    print("Total Action Words:", total_action_words)
-    print("All Action Words:", all_action_words)
+    # print("Action Words:", action_words)
+    # print("Total Action Words:", total_action_words)
+    # print("All Action Words:", all_action_words)
 
-    frequency_list, total_frequent_action_words, repeated_frequency = frequency_Action_words(all_action_words)
-    print("Frequent Action Words (appearing at least 3 times):", frequency_list)
-    print("Total Frequent Action Words:", total_frequent_action_words)
-    print("Repeated Frequency of Action Words:", repeated_frequency)
+    # frequency_list, total_frequent_action_words, repeated_frequency = frequency_Action_words(all_action_words)
+    # print("Frequent Action Words (appearing at least 3 times):", frequency_list)
+    # print("Total Frequent Action Words:", total_frequent_action_words)
+    # print("Repeated Frequency of Action Words:", repeated_frequency)
 
     # negative_action_words, total_negative_action_words, all_negative_action_words = get_negative_action_words(experience_and_projects_content)
     # print("Negative Action Words:", negative_action_words)
