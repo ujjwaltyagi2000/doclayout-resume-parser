@@ -15,3 +15,4 @@ resuscan-new
 resume_scan_lambda.py
 *.json
 original_score.py
+prompt.py
