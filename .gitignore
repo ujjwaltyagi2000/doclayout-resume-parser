@@ -16,3 +16,4 @@ resume_scan_lambda.py
 *.json
 original_score.py
 prompt.py
+counter_test.py

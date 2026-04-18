@@ -11,7 +11,7 @@ from modules.personal_details import *
 from modules.competencies import *
 from modules.presentation import *
 from modules.information import *
-from utils.ngrams import frequent_dynamic_ngrams
+from utils.ngrams import frequent_dynamic_ngrams, better_frequent_ngrams
 from utils.headings import get_headings
 from utils.names import *
 from utils.bold import get_bold
@@ -31,7 +31,7 @@ def process_resume(pdf_bytes):
     blocks = parser.parse(pdf_bytes)
 
     # 👉 Now you can pass this anywhere
-    print("Detected blocks:", blocks[:5])
+    # print("Detected blocks:", blocks[:5])
 
     # STEP 2: Groq (your existing flow)
     # linewise_content, _, _, _ = filter_body_content(pdf_bytes)
@@ -51,33 +51,34 @@ if __name__ == "__main__":
     # For local testing    
     # convert local PDF to bytes
     # pdf_path = "Puunita Chaturvedi.pdf"
-    # pdf_bytes = load_local_pdf(pdf_path)
+    pdf_path = "docs/ANANT_SINGH_ (2).pdf"
+    pdf_bytes = load_local_pdf(pdf_path)
     
     # For S3 PDF
-    pdf_bytes, pdf_file2 = fetch_pdf_from_s3(
-        "https://local-job-match-pro.s3.ap-south-2.amazonaws.com/e9168491d6ec8e5c0fcdaced9072de5b",
-        os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
-        os.getenv("AWS_SECRET_KEY")   #
-    )
+    # pdf_bytes, pdf_file2 = fetch_pdf_from_s3(
+    #     "https://local-job-match-pro.s3.ap-south-2.amazonaws.com/e9168491d6ec8e5c0fcdaced9072de5b",
+    #     os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
+    #     os.getenv("AWS_SECRET_KEY")   #
+    # )
     
     experience = 3
     file_name = "Ujjwal Tyagi.pdf"
 
-    # pdf text
+    # pdf text  
 
     # YOLO Pass
     results = process_resume(pdf_bytes)
-    print(results)
+    # print(results)
 
     # Extract Headings using Resuscan Code
-    # headings, subHeadings, notRequired_Heading, Work_Project_Headings, EduSkill_Headings, Other_Headings, Other_headings_db, sectionMap, sectionMapCount, standard_match_headings, standard_match_headings_count = get_headings(pdf_bytes)
-    # # printing all values separately:
-    # print("🔍 get_headings() outputs: ")
-    # print(f"\nHeadings: {headings}, \nSub Headings: {subHeadings}, \nNot Required heading: {notRequired_Heading}, \nWork Project Headings: {Work_Project_Headings}\n\n")
-    # actualHeadingsCount = len(subHeadings)
-    # NRlength = len(notRequired_Heading)
-    # ORlength = len(Other_Headings)
-    # ORlength_db=len(Other_headings_db)
+    headings, subHeadings, notRequired_Heading, Work_Project_Headings, EduSkill_Headings, Other_Headings, Other_headings_db, sectionMap, sectionMapCount, standard_match_headings, standard_match_headings_count = get_headings(pdf_bytes)
+    # printing all values separately:
+    print("🔍 get_headings() outputs: ")
+    print(f"\nHeadings: {headings}, \nSub Headings: {subHeadings}, \nNot Required heading: {notRequired_Heading}, \nWork Project Headings: {Work_Project_Headings}\n\n")
+    actualHeadingsCount = len(subHeadings)
+    NRlength = len(notRequired_Heading)
+    ORlength = len(Other_Headings)
+    ORlength_db=len(Other_headings_db)
     
 
     # Filter Body Content
@@ -246,10 +247,11 @@ if __name__ == "__main__":
     print("Tables Found (Method 2):", tables2)
     print("Tables Flag:", tables_flag)
 
-    file_size_kb,file_type,flag_file_size= get_fileDetails(pdf_file2)
-    print("File Size (KB):", file_size_kb)
-    print("File Type:", file_type)
-    print("File Size Flag (<=500KB):", flag_file_size)
+    # Comment out for local testing to avoid S3 dependency, uncomment for S3 testing
+    # file_size_kb,file_type,flag_file_size= get_fileDetails(pdf_file2)
+    # print("File Size (KB):", file_size_kb)
+    # print("File Type:", file_type)
+    # print("File Size Flag (<=500KB):", flag_file_size)
 
     # MISCELLANEOUS MENU METRICS
 
@@ -290,7 +292,15 @@ if __name__ == "__main__":
     raw_data2 = get_bold(pdf_bytes)
     print("Raw Data for Repeated Words Analysis (from get_bold):", raw_data2)
     repeated_words = frequent_dynamic_ngrams(raw_data2,combined_data)
-    print("Repeated Words (after removing combined data):", repeated_words) 
+    print("Repeated Words (after removing combined data):\n", repeated_words) 
+
+    # new ngrams function
+    words = raw_data2.split()
+    cleaned_words = [w for w in words if w not in combined_data]
+
+    result = better_frequent_ngrams(raw_data2, combined_data, min_n=4, max_n=20)
+
+    print("\n✅ Counter-based Frequent n-grams Result:\n", result)
 
     alloutput = detect_names_all(pdf_bytes,resume_text,extra_words)
     name_output = get_finalise_names(alloutput)
@@ -338,9 +348,9 @@ if __name__ == "__main__":
         "tables": tables,
         "tables2": tables2,
         "tables_flag": tables_flag,
-        "file_size_kb": file_size_kb,
-        "file_type": file_type,
-        "flag_file_size": flag_file_size,
+        # "file_size_kb": file_size_kb,
+        # "file_type": file_type,
+        # "flag_file_size": flag_file_size,
         "max_size": max_size,
         "content_size_flag": content_size_flag,
         "font_colors": font_colors,
