@@ -2,26 +2,45 @@ from config.settings import *
 import pandas as pd
 import spacy
 
-# 🔥 Load spaCy once
+#  Load spaCy once
 nlp = spacy.load("en_core_web_sm")
 
-# 🔥 Load action words once (lemma-based)
-def load_action_words_lemma():
+#  Load action words once (lemma-based)
+# def load_action_words_lemma():
+#     df = pd.read_excel(ACTION_WORDS_EXCEL_FILE_PATH, usecols='A')
+#     words = df.iloc[:, 0].dropna().tolist()
+
+#     lemma_set = set()
+
+#     for word in words:
+#         doc = nlp(word)
+#         for token in doc:
+#             lemma_set.add(token.lemma_.lower())
+
+#     return lemma_set
+
+def load_action_words_mapping():
     df = pd.read_excel(ACTION_WORDS_EXCEL_FILE_PATH, usecols='A')
     words = df.iloc[:, 0].dropna().tolist()
 
-    lemma_set = set()
+    lemma_to_original = {}
 
     for word in words:
         doc = nlp(word)
+
         for token in doc:
-            lemma_set.add(token.lemma_.lower())
+            lemma = token.lemma_.lower()
 
-    return lemma_set
+            # Store original word against lemma
+            lemma_to_original[lemma] = word.lower()
 
-ACTION_LEMMA_SET = load_action_words_lemma()
+    return lemma_to_original
 
-pd.DataFrame(list(ACTION_LEMMA_SET), columns=["Action Lemma"]).to_csv("action_lemmas.csv", index=False)
+# ACTION_LEMMA_SET = load_action_words_lemma()
+
+ACTION_LEMMA_MAP = load_action_words_mapping()
+
+# pd.DataFrame(list(ACTION_LEMMA_SET), columns=["Action Lemma"]).to_csv("action_lemmas.csv", index=False)
 
 # Extract first words
 def extract_first_words(bullets):
@@ -66,6 +85,36 @@ def suggest_past_tense(token):
 
 
 # Main Analyzer
+# def analyze_first_words(first_words):
+#     results = []
+
+#     for word in first_words:
+#         doc = nlp(word)
+
+#         for token in doc:
+#             lemma = token.lemma_.lower()
+#             is_action = lemma in ACTION_LEMMA_SET
+
+#             tense = None
+#             suggestion = None
+
+#             if is_action:
+#                 tense = get_tense(token)
+
+#                 if tense != "Past":
+#                     suggestion = suggest_past_tense(token)
+
+#             results.append({
+#                 "original": word,
+#                 "lemma": lemma,
+#                 "is_action": is_action,
+#                 "tense": tense,
+#                 "needs_fix": is_action and tense != "Past",
+#                 "suggested": suggestion
+#             })
+
+#     return results
+
 def analyze_first_words(first_words):
     results = []
 
@@ -74,7 +123,9 @@ def analyze_first_words(first_words):
 
         for token in doc:
             lemma = token.lemma_.lower()
-            is_action = lemma in ACTION_LEMMA_SET
+
+            # check via mapping
+            is_action = lemma in ACTION_LEMMA_MAP
 
             tense = None
             suggestion = None
@@ -83,7 +134,8 @@ def analyze_first_words(first_words):
                 tense = get_tense(token)
 
                 if tense != "Past":
-                    suggestion = suggest_past_tense(token)
+                    # use mapped original word instead of naive "ed"
+                    suggestion = ACTION_LEMMA_MAP[lemma]
 
             results.append({
                 "original": word,

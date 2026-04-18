@@ -140,258 +140,262 @@ if __name__ == "__main__":
     print(f"\n📃 Action Words Analysis Result: \n{action_words_result}")
     print(action_words_result)
 
-    # # ✅ Save to files
-    # with open("experience_projects_text.txt", "w") as f:
-    #     f.write(experience_and_projects_content)
+    # ✅ Save to files
+    with open("experience_projects_text.txt", "w") as f:
+        f.write(experience_and_projects_content)
 
-    # with open("experience_projects_bullets.txt", "w") as f:
-    #     for index, bullet in enumerate(combined_list):
-    #         f.write(f"[{index + 1}] {bullet}\n")
+    with open("experience_projects_bullets.txt", "w") as f:
+        for index, bullet in enumerate(combined_list):
+            f.write(f"[{index + 1}] {bullet}\n")
 
-    # # INFORMATION MENU METRICS
-    # action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content)
+    # INFORMATION MENU METRICS
+    action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content)
 
-    # print("Action Words:", action_words)
-    # print("Total Action Words:", total_action_words)
-    # print("All Action Words:", all_action_words)
+    print("Action Words:", action_words)
+    print("Total Action Words:", total_action_words)
+    print("All Action Words:", all_action_words)
 
-    # frequency_list, total_frequent_action_words, repeated_frequency = frequency_Action_words(all_action_words)
-    # print("Frequent Action Words (appearing at least 3 times):", frequency_list)
-    # print("Total Frequent Action Words:", total_frequent_action_words)
-    # print("Repeated Frequency of Action Words:", repeated_frequency)
+    frequency_list, total_frequent_action_words, repeated_frequency = frequency_Action_words(all_action_words)
+    print("Frequent Action Words (appearing at least 3 times):", frequency_list)
+    print("Total Frequent Action Words:", total_frequent_action_words)
+    print("Repeated Frequency of Action Words:", repeated_frequency)
 
-    # negative_action_words, total_negative_action_words, all_negative_action_words = get_negative_action_words(experience_and_projects_content)
-    # print("Negative Action Words:", negative_action_words)
-    # print("Total Negative Action Words:", total_negative_action_words)
-    # print("All Negative Action Words:", all_negative_action_words)
+    negative_action_words, total_negative_action_words, all_negative_action_words = get_negative_action_words(experience_and_projects_content)
+    print("Negative Action Words:", negative_action_words)
+    print("Total Negative Action Words:", total_negative_action_words)
+    print("All Negative Action Words:", all_negative_action_words)
 
-    # frequencyList_negative,total_repeated_actionwords_negative,repeated_frequency_negative =  frequency_Action_words(all_negative_action_words)
-    # print("Negative Action Words (appearing at least 3 times):", frequencyList_negative)
-    # print("Total Negative Action Words:", total_repeated_actionwords_negative)
-    # print("Repeated Frequency of Negative Action Words:", repeated_frequency_negative)
+    frequencyList_negative,total_repeated_actionwords_negative,repeated_frequency_negative =  frequency_Action_words(all_negative_action_words)
+    print("Negative Action Words (appearing at least 3 times):", frequencyList_negative)
+    print("Total Negative Action Words:", total_repeated_actionwords_negative)
+    print("Repeated Frequency of Negative Action Words:", repeated_frequency_negative)
 
-    # filler_words, total_filler_words, all_filler_words = get_filler_words(experience_and_projects_content)
-    # print("Filler Words:", filler_words)
-    # print("Total Filler Words:", total_filler_words)
-    # print("All Filler Words:", all_filler_words)
+    filler_words, total_filler_words, all_filler_words = get_filler_words(experience_and_projects_content)
+    print("Filler Words:", filler_words)
+    print("Total Filler Words:", total_filler_words)
+    print("All Filler Words:", all_filler_words)
 
-    # voice = text_voice(experience_and_projects_content)
-    # print("Passive Voice Constructions:", voice)
+    voice = text_voice(experience_and_projects_content)
+    print("Passive Voice Constructions:", voice)
 
 
-    # # PRESENTATION MENU METRICS
-    # font_styles,standard_font_style_flag,multiple_font_style,font_sizes,multiple_font_size = get_font_style_size(pdf_bytes)
-    # print("Font Styles:", font_styles)
-    # print("Standard Font Style Flag:", standard_font_style_flag)
-    # print("Multiple Font Styles:", multiple_font_style)
-    # print("Font Sizes:", font_sizes)
-    # print("Multiple Font Sizes:", multiple_font_size)
+    # PRESENTATION MENU METRICS
+    font_styles,standard_font_style_flag,multiple_font_style,font_sizes,multiple_font_size = get_font_style_size(pdf_bytes)
+    print("Font Styles:", font_styles)
+    print("Standard Font Style Flag:", standard_font_style_flag)
+    print("Multiple Font Styles:", multiple_font_style)
+    print("Font Sizes:", font_sizes)
+    print("Multiple Font Sizes:", multiple_font_size)
 
-    # resume_text = extract_full_text(pdf_bytes)
-    # print(f"✅ Extracted Resume Text (first 50 chars): {resume_text[:50]}")
+    resume_text = extract_full_text(pdf_bytes)
+    print(f"✅ Extracted Resume Text (first 50 chars): {resume_text[:50]}")
 
-    # # PERSONAL DETAILS MENU METRICS
-    # phones, phones1, phones2, all_phones = get_phones(resume_text)
-    # print("Phone Numbers (E164 format):", phones)
-    # print("Phone Numbers (Regex 1):", phones1)
-    # print("Phone Numbers (Regex 2):", phones2)
-    # print("All Phone Numbers:", all_phones)
+    # PERSONAL DETAILS MENU METRICS
+    phones, phones1, phones2, all_phones = get_phones(resume_text)
+    print("Phone Numbers (E164 format):", phones)
+    print("Phone Numbers (Regex 1):", phones1)
+    print("Phone Numbers (Regex 2):", phones2)
+    print("All Phone Numbers:", all_phones)
 
-    # reg_Phone = get_Phones(resume_text)
-    # print("Phone Numbers (Regex 3):", reg_Phone)
+    reg_Phone = get_Phones(resume_text)
+    print("Phone Numbers (Regex 3):", reg_Phone)
 
-    # email_finderSet =  get_emails(resume_text) 
-    # print("Email Addresses:", email_finderSet)
+    email_finderSet =  get_emails(resume_text) 
+    print("Email Addresses:", email_finderSet)
 
-    # url,linkedIn_flag,url_flag =  get_url(pdf_bytes)
-    # print("URLs:", url)
-    # print("LinkedIn Flag:", linkedIn_flag)
-    # print("URL Flag:", url_flag)
+    url,linkedIn_flag,url_flag =  get_url(pdf_bytes)
+    print("URLs:", url)
+    print("LinkedIn Flag:", linkedIn_flag)
+    print("URL Flag:", url_flag)
 
-    # images = check_Images(pdf_bytes)
-    # print("Images Found:", images)
+    images = check_Images(pdf_bytes)
+    print("Images Found:", images)
 
     # # COMPETENCIES MENU METRICS
 
-    # finalBullet,Bullets_Total,standard_bullet_flag= get_bullets(resume_text)
-    # print("Bullets Found:", finalBullet)
-    # print("Total Bullets:", Bullets_Total)
-    # print("Standard Bullet Flag:", standard_bullet_flag)
+    finalBullet,Bullets_Total,standard_bullet_flag= get_bullets(resume_text)
+    print("Bullets Found:", finalBullet)
+    print("Total Bullets:", Bullets_Total)
+    print("Standard Bullet Flag:", standard_bullet_flag)
 
-    # ats_date =  getATS_dates(resume_text)
-    # print("ATS Dates Found:", ats_date)
-    # dates_nonAts =  get_nonATSdates(resume_text)
-    # print("Non ATS Dates Found:", dates_nonAts)
-    # dates = ats_date + dates_nonAts
+    ats_date =  getATS_dates(resume_text)
+    print("ATS Dates Found:", ats_date)
+    dates_nonAts =  get_nonATSdates(resume_text)
+    print("Non ATS Dates Found:", dates_nonAts)
+    dates = ats_date + dates_nonAts
 
-    # measurable= get_namedEntityMeasurable(resume_text)
-    # print("Measurable Named Entities:", measurable)
-    # clean_measurable =  get_measurableUpdated(resume_text,finalBullet,measurable,all_phones,dates)
-    # print("Clean Measurable Strings:", clean_measurable)
+    measurable= get_namedEntityMeasurable(resume_text)
+    # measurable= get_namedEntityMeasurable(experience_and_projects_content)
+    print("Measurable Named Entities:", measurable)
+    clean_measurable =  get_measurableUpdated(resume_text,finalBullet,measurable,all_phones,dates)
+    # clean_measurable =  get_measurableUpdated(experience_and_projects_content,finalBullet,measurable,all_phones,dates)
+    print("Clean Measurable Strings:", clean_measurable)
 
-    # skills,Skills_Total =  extract_skills(resume_text)
-    # print("Extracted Skills:", skills)
-    # print("Total Skills Extracted:", Skills_Total)
+    skills,Skills_Total =  extract_skills(resume_text)
+    print("Extracted Skills:", skills)
+    print("Total Skills Extracted:", Skills_Total)
 
-    # tables=get_tables(pdf_bytes)
-    # tables2=get_tables2(pdf_bytes)
-    # tables_flag=0
-    # if(tables=="table" and tables2 == "table"):
-    #     tables_flag=1
-    # if(tables=="table"):
-    #     tables_flag=1
-    # print("Tables Found (Method 1):", tables)
-    # print("Tables Found (Method 2):", tables2)
-    # print("Tables Flag:", tables_flag)
+    tables=get_tables(pdf_bytes)
+    tables2=get_tables2(pdf_bytes)
+    tables_flag=0
+    if(tables=="table" and tables2 == "table"):
+        tables_flag=1
+    if(tables=="table"):
+        tables_flag=1
+    print("Tables Found (Method 1):", tables)
+    print("Tables Found (Method 2):", tables2)
+    print("Tables Flag:", tables_flag)
 
-    # file_size_kb,file_type,flag_file_size= get_fileDetails(pdf_file2)
-    # print("File Size (KB):", file_size_kb)
-    # print("File Type:", file_type)
-    # print("File Size Flag (<=500KB):", flag_file_size)
+    file_size_kb,file_type,flag_file_size= get_fileDetails(pdf_file2)
+    print("File Size (KB):", file_size_kb)
+    print("File Type:", file_type)
+    print("File Size Flag (<=500KB):", flag_file_size)
 
-    # # MISCELLANEOUS MENU METRICS
+    # MISCELLANEOUS MENU METRICS
 
-    # max_size, content_size_flag = get_maxSize_words(pdf_bytes)
-    # print("Max Font Size:", max_size)
-    # print("Content Size Flag (1 if max font size is 10, 11, or 12):", content_size_flag)
+    max_size, content_size_flag = get_maxSize_words(pdf_bytes)
+    print("Max Font Size:", max_size)
+    print("Content Size Flag (1 if max font size is 10, 11, or 12):", content_size_flag)
 
-    # font_colors,font_colors_Total,standard_color_flag= get_font_color(pdf_bytes)
-    # print("Font Colors Found:", font_colors)
-    # print("Total Font Colors Found:", font_colors_Total)
-    # print("Standard Color Flag (1 if only black or dark colors found):", standard_color_flag)
+    font_colors,font_colors_Total,standard_color_flag= get_font_color(pdf_bytes)
+    print("Font Colors Found:", font_colors)
+    print("Total Font Colors Found:", font_colors_Total)
+    print("Standard Color Flag (1 if only black or dark colors found):", standard_color_flag)
 
-    # total_word_count = get_totalWordCount(resume_text)
-    # print("Total Word Count:", total_word_count)
+    total_word_count = get_totalWordCount(resume_text)
+    print("Total Word Count:", total_word_count)
 
-    # pages_count =  get_pageCount(pdf_bytes)
-    # print("Total Pages in Resume:", pages_count)
+    pages_count =  get_pageCount(pdf_bytes)
+    print("Total Pages in Resume:", pages_count)
 
-    # personalPronouns = get_excel_pronouns(resume_text)
-    # print("Personal Pronouns:", personalPronouns)
+    personalPronouns = get_excel_pronouns(resume_text)
+    print("Personal Pronouns:", personalPronouns)
 
-    # headings,subHeadings,notRequired_Heading,Work_Project_Headings,EduSkill_Headings,Other_Headings,Other_headings_db,sectionMap,sectionMapCount,standard_match_headings,standard_match_headings_count =  get_headings(pdf_bytes)
-    # actualHeadingsCount = len(subHeadings)
-    # NRlength = len(notRequired_Heading)
-    # ORlength = len(Other_Headings)
-    # ORlength_db=len(Other_headings_db)
-    # print("Actual Headings Count:", actualHeadingsCount)
-    # print("NRlength:", NRlength)
-    # print("ORlength:", ORlength)
-    # print("ORlength_db:", ORlength_db)
+    headings,subHeadings,notRequired_Heading,Work_Project_Headings,EduSkill_Headings,Other_Headings,Other_headings_db,sectionMap,sectionMapCount,standard_match_headings,standard_match_headings_count =  get_headings(pdf_bytes)
+    actualHeadingsCount = len(subHeadings)
+    NRlength = len(notRequired_Heading)
+    ORlength = len(Other_Headings)
+    ORlength_db=len(Other_headings_db)
+    print("Actual Headings Count:", actualHeadingsCount)
+    print("NRlength:", NRlength)
+    print("ORlength:", ORlength)
+    print("ORlength_db:", ORlength_db)
 
-    # # REPEATED WORDS
+    # REPEATED WORDS
 
-    # extra_words = ['\uf0d8','\uf0b7',':','/','|']
-    # combined_data = ats_date + dates_nonAts + all_phones + finalBullet + list(email_finderSet) + extra_words
-    # combined_data = [word for sublist in combined_data for word in sublist.split()]
-    # raw_data2 = get_bold(pdf_bytes)
-    # repeated_words = frequent_dynamic_ngrams(raw_data2,combined_data)
-    # print("Repeated Words (after removing combined data):", repeated_words) 
+    extra_words = ['\uf0d8','\uf0b7',':','/','|']
+    combined_data = ats_date + dates_nonAts + all_phones + finalBullet + list(email_finderSet) + extra_words
+    combined_data = [word for sublist in combined_data for word in sublist.split()]
+    print("Combined Data for Repeated Words Analysis:", combined_data)
+    raw_data2 = get_bold(pdf_bytes)
+    print("Raw Data for Repeated Words Analysis (from get_bold):", raw_data2)
+    repeated_words = frequent_dynamic_ngrams(raw_data2,combined_data)
+    print("Repeated Words (after removing combined data):", repeated_words) 
 
-    # alloutput = detect_names_all(pdf_bytes,resume_text,extra_words)
-    # name_output = get_finalise_names(alloutput)
+    alloutput = detect_names_all(pdf_bytes,resume_text,extra_words)
+    name_output = get_finalise_names(alloutput)
 
 
-    # # save outputs to a file
-    # output_data = {
-    #     "action_words": action_words,
-    #     "total_action_words": total_action_words,
-    #     "all_action_words": all_action_words,
-    #     "frequent_action_words": frequency_list,
-    #     "total_frequent_action_words": total_frequent_action_words,
-    #     "repeated_frequency": repeated_frequency,
-    #     "negative_action_words": negative_action_words,
-    #     "total_negative_action_words": total_negative_action_words,
-    #     "all_negative_action_words": all_negative_action_words,
-    #     "frequencyList_negative": frequencyList_negative,
-    #     "total_repeated_actionwords_negative": total_repeated_actionwords_negative,
-    #     "repeated_frequency_negative": repeated_frequency_negative,
-    #     "filler_words": filler_words,
-    #     "total_filler_words": total_filler_words,
-    #     "all_filler_words": all_filler_words,
-    #     "passive_voice_constructions": voice,
-    #     "font_styles": font_styles,
-    #     "standard_font_style_flag": standard_font_style_flag,
-    #     "multiple_font_style": multiple_font_style,
-    #     "font_sizes": font_sizes,
-    #     "multiple_font_size": multiple_font_size,
-    #     "phone_numbers": all_phones,
-    #     "reg_Phone": reg_Phone,
-    #     "email_finderSet": list(email_finderSet),
-    #     "url": url,
-    #     "linkedIn_flag": linkedIn_flag,
-    #     "url_flag": url_flag,
-    #     "images_found": images,
-    #     "finalBullet": finalBullet,
-    #     "Bullets_Total": Bullets_Total,
-    #     "standard_bullet_flag": standard_bullet_flag,
-    #     "ats_date": ats_date,
-    #     "dates_nonAts": dates_nonAts,
-    #     "measurable_ner": measurable,
-    #     "clean_measurable": clean_measurable,
-    #     "skills": skills,
-    #     "Skills_Total": Skills_Total,
-    #     "tables": tables,
-    #     "tables2": tables2,
-    #     "tables_flag": tables_flag,
-    #     "file_size_kb": file_size_kb,
-    #     "file_type": file_type,
-    #     "flag_file_size": flag_file_size,
-    #     "max_size": max_size,
-    #     "content_size_flag": content_size_flag,
-    #     "font_colors": font_colors,
-    #     "font_colors_Total": font_colors_Total,
-    #     "standard_color_flag": standard_color_flag,
-    #     "total_word_count": total_word_count,
-    #     "pages_count": pages_count,
-    #     "personalPronouns": personalPronouns
-    # }
+    # save outputs to a file
+    output_data = {
+        "action_words": action_words,
+        "total_action_words": total_action_words,
+        "all_action_words": all_action_words,
+        "frequent_action_words": frequency_list,
+        "total_frequent_action_words": total_frequent_action_words,
+        "repeated_frequency": repeated_frequency,
+        "negative_action_words": negative_action_words,
+        "total_negative_action_words": total_negative_action_words,
+        "all_negative_action_words": all_negative_action_words,
+        "frequencyList_negative": frequencyList_negative,
+        "total_repeated_actionwords_negative": total_repeated_actionwords_negative,
+        "repeated_frequency_negative": repeated_frequency_negative,
+        "filler_words": filler_words,
+        "total_filler_words": total_filler_words,
+        "all_filler_words": all_filler_words,
+        "passive_voice_constructions": voice,
+        "font_styles": font_styles,
+        "standard_font_style_flag": standard_font_style_flag,
+        "multiple_font_style": multiple_font_style,
+        "font_sizes": font_sizes,
+        "multiple_font_size": multiple_font_size,
+        "phone_numbers": all_phones,
+        "reg_Phone": reg_Phone,
+        "email_finderSet": list(email_finderSet),
+        "url": url,
+        "linkedIn_flag": linkedIn_flag,
+        "url_flag": url_flag,
+        "images_found": images,
+        "finalBullet": finalBullet,
+        "Bullets_Total": Bullets_Total,
+        "standard_bullet_flag": standard_bullet_flag,
+        "ats_date": ats_date,
+        "dates_nonAts": dates_nonAts,
+        "measurable_ner": measurable,
+        "clean_measurable": clean_measurable,
+        "skills": skills,
+        "Skills_Total": Skills_Total,
+        "tables": tables,
+        "tables2": tables2,
+        "tables_flag": tables_flag,
+        "file_size_kb": file_size_kb,
+        "file_type": file_type,
+        "flag_file_size": flag_file_size,
+        "max_size": max_size,
+        "content_size_flag": content_size_flag,
+        "font_colors": font_colors,
+        "font_colors_Total": font_colors_Total,
+        "standard_color_flag": standard_color_flag,
+        "total_word_count": total_word_count,
+        "pages_count": pages_count,
+        "personalPronouns": personalPronouns
+    }
 
-    # with open(FINAL_OUTPUT_FILE_PATH, "w") as f:
-    #     json.dump(output_data, f, indent=4)
+    with open(FINAL_OUTPUT_FILE_PATH, "w") as f:
+        json.dump(output_data, f, indent=4)
 
-    # # calculating final score
-    # resume_score, score_array = calculate_resume_score(
-    #     standard_font_style_flag=standard_font_style_flag,
-    #     multiple_font_style=multiple_font_style,
-    #     multiple_font_size=multiple_font_size,
-    #     content_size_flag=content_size_flag,
-    #     font_colors_Total=font_colors_Total,
-    #     standard_color_flag=standard_color_flag,
-    #     actionwords_total=total_action_words,
-    #     actionwords_total_negative=total_negative_action_words,
-    #     total_repeated_actionwords_negative=total_frequent_action_words,
-    #     Bullets_Total=Bullets_Total,
-    #     standard_bullet_flag=standard_bullet_flag,
-    #     total_repeated_actionwords=total_frequent_action_words,
-    #     ats_date=ats_date,
-    #     dates_nonAts=dates_nonAts,
-    #     clean_measurable=clean_measurable,
-    #     total_word_count=total_word_count,
-    #     email_finderSet=email_finderSet,
-    #     phonenumbers_finderSet=phones,
-    #     images=images,
-    #     linkedIn_flag=linkedIn_flag,
-    #     pages_count=pages_count,
-    #     personalPronouns=personalPronouns,
-    #     tables_flag=tables_flag,
-    #     Work_Project_Headings=Work_Project_Headings,
-    #     EduSkill_Headings=EduSkill_Headings,
-    #     NRlength=NRlength,
-    #     ORlength_db=ORlength_db,
-    #     Skills_Total=Skills_Total,
-    #     standard_match_headings_count=standard_match_headings_count,
-    #     sectionMapCount=sectionMapCount,
-    #     phone_all1=all_phones,
-    #     actualHeadingsCount=actualHeadingsCount,
-    #     experience=experience,
-    #     fillerwords_total=total_filler_words,
-    #     output_voice=voice,
-    #     repeated_words=repeated_words,
-    #     file_name=file_name,
-    #     name_output=name_output,
-    #     ORlength=ORlength 
-    # )
+    # calculating final score
+    resume_score, score_array = calculate_resume_score(
+        standard_font_style_flag=standard_font_style_flag,
+        multiple_font_style=multiple_font_style,
+        multiple_font_size=multiple_font_size,
+        content_size_flag=content_size_flag,
+        font_colors_Total=font_colors_Total,
+        standard_color_flag=standard_color_flag,
+        actionwords_total=total_action_words,
+        actionwords_total_negative=total_negative_action_words,
+        total_repeated_actionwords_negative=total_frequent_action_words,
+        Bullets_Total=Bullets_Total,
+        standard_bullet_flag=standard_bullet_flag,
+        total_repeated_actionwords=total_frequent_action_words,
+        ats_date=ats_date,
+        dates_nonAts=dates_nonAts,
+        clean_measurable=clean_measurable,
+        total_word_count=total_word_count,
+        email_finderSet=email_finderSet,
+        phonenumbers_finderSet=phones,
+        images=images,
+        linkedIn_flag=linkedIn_flag,
+        pages_count=pages_count,
+        personalPronouns=personalPronouns,
+        tables_flag=tables_flag,
+        Work_Project_Headings=Work_Project_Headings,
+        EduSkill_Headings=EduSkill_Headings,
+        NRlength=NRlength,
+        ORlength_db=ORlength_db,
+        Skills_Total=Skills_Total,
+        standard_match_headings_count=standard_match_headings_count,
+        sectionMapCount=sectionMapCount,
+        phone_all1=all_phones,
+        actualHeadingsCount=actualHeadingsCount,
+        experience=experience,
+        fillerwords_total=total_filler_words,
+        output_voice=voice,
+        repeated_words=repeated_words,
+        file_name=file_name,
+        name_output=name_output,
+        ORlength=ORlength 
+    )
 
-    # print("📊 Final Resume Score:", resume_score)
-    # print("📊 Final Resume Score Array:", score_array)
+    print("📊 Final Resume Score:", resume_score)
+    print("📊 Final Resume Score Array:", score_array)
