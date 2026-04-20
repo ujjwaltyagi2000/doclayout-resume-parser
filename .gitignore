@@ -17,3 +17,4 @@ resume_scan_lambda.py
 original_score.py
 prompt.py
 counter_test.py
+*.csv
