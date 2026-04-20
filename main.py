@@ -4,13 +4,14 @@ from extraction.section_mapper import map_content_to_standard_header
 from extraction.body_content import filter_body_content
 from extraction.section_builder import SectionBuilder 
 from evaluation.score import calculate_resume_score
+from extraction.pointers import *
 from extraction.headings import get_headings
 from parsers.yolo_parser import LayoutParser
 from modules.personal_details import *
 from modules.competencies import *
 from modules.presentation import *
 from modules.information import *
-from utils.ngrams import frequent_dynamic_ngrams
+from utils.ngrams import frequent_dynamic_ngrams, better_frequent_ngrams
 from utils.headings import get_headings
 from utils.names import *
 from utils.bold import get_bold
@@ -30,7 +31,7 @@ def process_resume(pdf_bytes):
     blocks = parser.parse(pdf_bytes)
 
     # 👉 Now you can pass this anywhere
-    print("Detected blocks:", blocks[:5])
+    # print("Detected blocks:", blocks[:5])
 
     # STEP 2: Groq (your existing flow)
     # linewise_content, _, _, _ = filter_body_content(pdf_bytes)
@@ -118,11 +119,38 @@ if __name__ == "__main__":
     with open(STANDARD_SECTIONS_OUTPUT_FILE_PATH, "w") as f:
         json.dump(standard_sections, f, indent=4)
 
-    experience_and_projects_content = standard_sections.get("Experience", "") + " " + standard_sections.get("Projects", "")
+    # experience_and_projects_content = standard_sections.get("Experience", "") + " " + standard_sections.get("Projects", "")
     # print(f"✅ Experience and Projects Content: {experience_and_projects_content}")
 
+    # ✅ Extract Experience + Projects using .get("text") and .get("bullets")
+    exp_data = standard_sections.get("Experience", {})
+    proj_data = standard_sections.get("Projects", {})
+
+    experience_and_projects_content = (
+        exp_data.get("text", "") + " " + proj_data.get("text", "")
+    ).strip()
+
+    combined_list = exp_data.get("bullets", []) + proj_data.get("bullets", [])
+
+    first_words = extract_first_words(combined_list)
+    print(f"🚀 First words extracted from bullets: \n{first_words}")
+    # print(first_words)
+
+    action_words_result = analyze_first_words(first_words)
+    print(f"\n📃 Action Words Analysis Result: \n{action_words_result}")
+    print(action_words_result)
+
+    # ✅ Save to files
+    with open("experience_projects_text.txt", "w") as f:
+        f.write(experience_and_projects_content)
+
+    with open("experience_projects_bullets.txt", "w") as f:
+        for index, bullet in enumerate(combined_list):
+            f.write(f"[{index + 1}] {bullet}\n")
+
     # INFORMATION MENU METRICS
-    action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content)
+    # action_words, total_action_words, all_action_words = get_action_words(resume_text) # full resume text
+    action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content) # experience and projects content only
 
     print("Action Words:", action_words)
     print("Total Action Words:", total_action_words)
@@ -133,7 +161,8 @@ if __name__ == "__main__":
     print("Total Frequent Action Words:", total_frequent_action_words)
     print("Repeated Frequency of Action Words:", repeated_frequency)
 
-    negative_action_words, total_negative_action_words, all_negative_action_words = get_negative_action_words(experience_and_projects_content)
+    # negative_action_words, total_negative_action_words, all_negative_action_words = get_negative_action_words(resume_text) # full resume text
+    negative_action_words, total_negative_action_words, all_negative_action_words = get_negative_action_words(experience_and_projects_content) # experience and projects content only
     print("Negative Action Words:", negative_action_words)
     print("Total Negative Action Words:", total_negative_action_words)
     print("All Negative Action Words:", all_negative_action_words)
@@ -197,9 +226,11 @@ if __name__ == "__main__":
     print("Non ATS Dates Found:", dates_nonAts)
     dates = ats_date + dates_nonAts
 
-    measurable= get_namedEntityMeasurable(resume_text)
+    # measurable= get_namedEntityMeasurable(resume_text) # full resume text
+    measurable = get_namedEntityMeasurable(experience_and_projects_content) # experience and projects content only
     print("Measurable Named Entities:", measurable)
-    clean_measurable =  get_measurableUpdated(resume_text,finalBullet,measurable,all_phones,dates)
+    # clean_measurable =  get_measurableUpdated(resume_text,finalBullet,measurable,all_phones,dates) # full resume text
+    clean_measurable = get_measurableUpdated(experience_and_projects_content,finalBullet,measurable,all_phones,dates) # experience and projects content only
     print("Clean Measurable Strings:", clean_measurable)
 
     skills,Skills_Total =  extract_skills(resume_text)
@@ -259,7 +290,15 @@ if __name__ == "__main__":
     combined_data = [word for sublist in combined_data for word in sublist.split()]
     raw_data2 = get_bold(pdf_bytes)
     repeated_words = frequent_dynamic_ngrams(raw_data2,combined_data)
-    print("Repeated Words (after removing combined data):", repeated_words) 
+    print("Repeated Words (after removing combined data):\n", repeated_words) 
+
+    # new ngrams function
+    words = raw_data2.split()
+    cleaned_words = [w for w in words if w not in combined_data]
+
+    result = better_frequent_ngrams(raw_data2, combined_data, min_n=4, max_n=20)
+
+    print("\n✅ Counter-based Frequent n-grams Result:\n", result)
 
     alloutput = detect_names_all(pdf_bytes,resume_text,extra_words)
     name_output = get_finalise_names(alloutput)
