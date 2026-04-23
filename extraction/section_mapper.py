@@ -93,6 +93,61 @@ def combine_section_text(section_data):
     combined_string = "\n".join(texts)
     return combined_string, texts
 
+def save_useless_bullets(bullets, file_path="useless_bullets.txt", min_words=8):
+
+    useless_bullets = []
+    useful_bullets = []
+
+    for bullet in bullets:
+        word_count = len(bullet.strip().split())
+
+        if word_count < min_words:
+            useless_bullets.append(bullet)
+        else:
+            useful_bullets.append(bullet)
+
+    # Save useless bullets to file
+    with open(file_path, "w") as f:
+        for i, bullet in enumerate(useless_bullets, 1):
+            f.write(f"[{i}] ({len(bullet.split())} words) {bullet}\n")
+
+    print(f"\n⚠️ Useless bullets saved: {len(useless_bullets)} → {file_path}")
+
+    return {
+        "useless_bullets": useless_bullets,
+        "useful_bullets": useful_bullets,
+        "total_useless": len(useless_bullets),
+        "total_useful": len(useful_bullets)
+    }
+
+def get_mapped_section_text(sections, standard_headings_map):
+
+    if isinstance(standard_headings_map, str):
+        standard_headings_map = ast.literal_eval(standard_headings_map)
+
+    # Step 1: get mapped headers
+    mapped_headers = [
+        v for v in standard_headings_map.values()
+        if v and v.strip()
+    ]
+
+    print("✅ Mapped Headers:", mapped_headers)
+
+    remaining_text = ""
+    remaining_bullets = []
+
+    for header in mapped_headers:
+
+        if header in sections:
+
+            section_data = sections[header]
+
+            text, bullets = combine_section_text(section_data)
+
+            remaining_text += " " + text
+            remaining_bullets.extend(bullets)
+
+    return remaining_text.strip(), remaining_bullets
 
 def map_content_to_standard_header(sections, standard_headers):
 

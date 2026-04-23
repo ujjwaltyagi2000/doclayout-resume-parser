@@ -1,8 +1,8 @@
 from groq_utils.cleaned_headers import filter_headers_with_groq, get_standard_headings_map
 from parsers.pdf_parser import load_local_pdf, fetch_pdf_from_s3, extract_full_text
-from extraction.section_mapper import map_content_to_standard_header
+from extraction.section_mapper import map_content_to_standard_header, save_useless_bullets, get_mapped_section_text
 from extraction.body_content import filter_body_content
-from extraction.section_builder import SectionBuilder 
+from extraction.section_builder import SectionBuilder
 from evaluation.score import calculate_resume_score
 from extraction.pointers import *
 from extraction.headings import get_headings
@@ -131,6 +131,11 @@ if __name__ == "__main__":
     ).strip()
 
     combined_list = exp_data.get("bullets", []) + proj_data.get("bullets", [])
+
+    bullet_analysis = save_useless_bullets(combined_list)
+
+    print("Useless Bullets:", bullet_analysis["useless_bullets"])
+    print("Total Useless:", bullet_analysis["total_useless"])
 
     first_words = extract_first_words(combined_list)
     print(f"🚀 First words extracted from bullets: \n{first_words}")
@@ -299,6 +304,24 @@ if __name__ == "__main__":
     result = better_frequent_ngrams(raw_data2, combined_data, min_n=4, max_n=20)
 
     print("\n✅ Counter-based Frequent n-grams Result:\n", result)
+
+
+    filtered_text, filtered_bullets = get_mapped_section_text(
+        sections,
+        standard_headings_map
+    )
+
+    # Optional: combine bullets too
+    final_text = filtered_text + " " + " ".join(filtered_bullets)
+
+    result = better_frequent_ngrams(
+        final_text,
+        combined_data,
+        min_n=4,
+        max_n=20
+    )
+
+    print("\n✅ Filtered Frequent n-grams Result:\n", result)
 
     alloutput = detect_names_all(pdf_bytes,resume_text,extra_words)
     name_output = get_finalise_names(alloutput)
