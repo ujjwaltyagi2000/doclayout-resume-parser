@@ -18,3 +18,4 @@ original_score.py
 prompt.py
 counter_test.py
 *.csv
+*.txt

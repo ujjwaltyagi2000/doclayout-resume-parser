@@ -385,45 +385,45 @@ cleaned_headers_prompt_template = """
 # null
 # """
 
-# # TEST PROMPT 7: ✅ Worked for edge cases
-# cleaned_headers_prompt_template = """
-# Extract valid resume section headers from this list: {headers}
+# TEST PROMPT 7: ✅ Worked for edge cases
+cleaned_headers_prompt_template_v3 = """
+Extract valid resume section headers from this list: {headers}
 
-#     Each List Item contains three fields: 
-#     1. Header Text
-#     3. Font Size
-#     2. Y co-ordinate (within document)
+    Each List Item contains three fields: 
+    1. Header Text
+    3. Font Size
+    2. Y co-ordinate (within document)
 
-#     Rules:
+    Rules:
 
-# 1) Use font size + heading level as primary signals:
-#     - Larger font sizes and lower levels (e.g., L1) are more likely to be real section headers.
-#     - Smaller font sizes and deeper levels (e.g., L3/L4) are often subheadings, roles, companies, projects, or details — exclude them.
-#     - Suppose 3/4 font sizes look to be section headings in that case, we can consider all similar font sizes to be section headinds
-# 2) Remove duplicates
-# 3) Return ONLY a Python list, nothing else
-# 4) Important Remove:
-#     - remove Person name (any name-like header)
-#     - Remove names, dates, company names, and project details
-#     - Company names, job titles, project titles
-#     - Dates, locations, degree/program lines (e.g., “MBA Finance…”, “Apr 2022 - Sep 2023”)
-#     - Anything that looks like content rather than a section label
-# 6) Output must preserve the header text EXACTLY as it appears in the input (same casing/spelling).
-#     - Do NOT rewrite, normalize, or expand headers.
-#     - Do NOT invent new headers.
-# 7) Important to remeber Return null if you beleive no valid result as output of section heading, since you are a resume expert
+1) Use font size + heading level as primary signals:
+    - Larger font sizes and lower levels (e.g., L1) are more likely to be real section headers.
+    - Smaller font sizes and deeper levels (e.g., L3/L4) are often subheadings, roles, companies, projects, or details — exclude them.
+    - Suppose 3/4 font sizes look to be section headings in that case, we can consider all similar font sizes to be section headinds
+2) Remove duplicates
+3) Return ONLY a Python list, nothing else
+4) Important Remove:
+    - remove Person name (any name-like header)
+    - Remove names, dates, company names, and project details
+    - Company names, job titles, project titles
+    - Dates, locations, degree/program lines (e.g., “MBA Finance…”, “Apr 2022 - Sep 2023”)
+    - Anything that looks like content rather than a section label
+6) Output must preserve the header text EXACTLY as it appears in the input (same casing/spelling).
+    - Do NOT rewrite, normalize, or expand headers.
+    - Do NOT invent new headers.
+7) Important to remeber Return null if you beleive no valid result as output of section heading, since you are a resume expert
 
 
-#     IMPORTANT: Your entire response must be ONLY the list in this exact format:
-#     ['Header1', 'Header2', 'Header3']
-#     Do not include explanations, code, markdown, or any other text.
-# If you don't find any valid headers, return an empty list. Do not give any headers that do not really exist.
+    IMPORTANT: Your entire response must be ONLY the list in this exact format:
+    ['Header1', 'Header2', 'Header3']
+    Do not include explanations, code, markdown, or any other text.
+If you don't find any valid headers, return an empty list. Do not give any headers that do not really exist.
 
-# CRITICAL ANTI-HALLUCINATION RULE: You may ONLY return headers that are verbatim present in the input list above.
-# If every item in the input is a name, date, company, job title, or other non-resume section content, you MUST return [].
-# Do NOT invent, infer, or generate any header that does not appear word-for-word in the input. When in doubt, return [].
+CRITICAL ANTI-HALLUCINATION RULE: You may ONLY return headers that are verbatim present in the input list above.
+If every item in the input is a name, date, company, job title, or other non-resume section content, you MUST return [].
+Do NOT invent, infer, or generate any header that does not appear word-for-word in the input. When in doubt, return [].
 
-# """
+"""
 
 # ✅ CURRENT WORKING PROMPT FOR SECTION MAPPING
 # standard_headings_prompt = """

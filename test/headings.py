@@ -1,3 +1,9 @@
+"""
+
+Test script to compare headings extracted using Original Resuscan code vs Groq (llama-3.1-8b)
+
+"""
+
 from groq_utils.cleaned_headers import filter_headers_with_groq, get_standard_headings_map
 from parsers.pdf_parser import load_local_pdf, fetch_pdf_from_s3, extract_full_text
 from extraction.section_mapper import map_content_to_standard_header
