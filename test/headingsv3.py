@@ -9,7 +9,7 @@ from parsers.pdf_parser import load_local_pdf, fetch_pdf_from_s3, extract_full_t
 from extraction.section_mapper import map_content_to_standard_header
 # from extraction.body_content import filter_body_content
 from extraction.body_content import filter_body_content_new as filter_body_content
-from test.model_inference import *
+from extraction.model_inference import *
 from extraction.section_builder import SectionBuilder 
 from evaluation.score import calculate_resume_score
 from extraction.pointers import *
