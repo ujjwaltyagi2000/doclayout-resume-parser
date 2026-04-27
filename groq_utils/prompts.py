@@ -483,7 +483,7 @@ Do NOT invent, infer, or generate any header that does not appear word-for-word 
 
 # """
 
-# 🧪 TEST PROMPT 2
+# 🧪 TEST PROMPT 2 --> ✅ Looks Promising
 
 standard_headings_prompt = """
 You are a resume header mapping assistant.
@@ -504,4 +504,28 @@ RULES (strictly follow):
 
 Output format example:
 {{"Objective": "", "Summary": "", "Experience": "EXPERIENCE", "Projects": "PROJECTS"}}
+
+"""
+# 🧪 TEST PROMPT 3 
+
+standard_headings_prompt_v2 = """
+You are a resume header mapping assistant.
+
+STANDARD HEADERS (these are the ONLY allowed keys): ["Summary", "Experience", "Projects", "Trainings", "Certifications", "Achievements", "Volunteer"]
+
+EXTRACTED HEADERS: {cleaned_headers}
+
+Your job: Map each STANDARD HEADER to the closest EXTRACTED HEADER.
+
+RULES (strictly follow):
+1. Output ONLY a Python dictionary.
+2. Keys MUST be EXACTLY these 7: "Summary", "Experience", "Projects", "Trainings", "Certifications", "Achievements", "Volunteer"
+3. Values must come from the EXTRACTED HEADERS list only.
+4. If no match found for a key, set value to "".
+5. Do NOT add any extra keys beyond the 4 standard headers.
+6. Do NOT output explanations, markdown, or code blocks.
+
+Output format example:
+{{"Summary": "Professional Summary", "Experience": "Work Experience", "Projects": "PROJECTS", "Trainings": "", "Certifications": "", "Achievements": "", "Volunteer": ""}}
+
 """
