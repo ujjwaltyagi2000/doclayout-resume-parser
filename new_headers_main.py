@@ -1,3 +1,11 @@
+"""
+
+This script processes resumes by extracting sections based on YOLO layout parsing and Groq-based header filtering. 
+It also detects if the resume is single or multi-column, builds sections accordingly, and maps them to standard headings.
+It then maps the extracted sections to standard headings, analyzes the content for various metrics, and calculates a final resume score.
+
+"""
+
 from groq_utils.cleaned_headers import filter_headers_with_groq, get_standard_headings_map
 from parsers.pdf_parser import load_local_pdf, fetch_pdf_from_s3, extract_full_text
 from extraction.section_mapper import map_content_to_standard_header, save_useless_bullets, get_mapped_section_text
@@ -21,6 +29,7 @@ from utils.document import *
 from utils.pronouns import *
 from groq_utils.prompts import *
 from config.settings import *
+from check_multi_colsv2 import detect_columns_advanced
 import pandas as pd
 import time
 import json
@@ -28,7 +37,8 @@ import os
 # from groq_utils.resuscan_groq import filter_body_content, filter_headers_with_groq
 
 MODEL_THRESHOLD = 0.9
-DATA_DIR = "documents"
+# DATA_DIR = "documents"
+DATA_DIR = "Check PDFs"
 
 def map_yolo_headers_with_fonts(yolo_blocks, word_positions):
     enriched_headers = []
@@ -76,7 +86,9 @@ def process_resume(pdf_bytes, experience, file_name):
 
     # YOLO Pass
     results = parse_resume_with_yolo(pdf_bytes)
-    print(results)
+    # print(results)
+    with open("yolo_blocks.json", "w") as f:
+        json.dump(results, f, indent=2)
 
     # Extract Headings using Resuscan Code
     headings, subHeadings, notRequired_Heading, Work_Project_Headings, EduSkill_Headings, Other_Headings, Other_headings_db, sectionMap, sectionMapCount, standard_match_headings, standard_match_headings_count = get_headings(pdf_bytes)
@@ -109,11 +121,13 @@ def process_resume(pdf_bytes, experience, file_name):
     # standard_headings_map = get_standard_headings_map(cleaned_headers, standard_headings_prompt)
     # print(f"✅ Standard Headings Map: {standard_headings_map}")
     
-    standard_headings_map_groq = get_standard_headings_map(cleaned_headers, standard_headings_prompt_v2)
-    print(f"✅ Standard Headings Map Groq: {standard_headings_map_groq}")
+    # standard_headings_map_groq = get_standard_headings_map(cleaned_headers, standard_headings_prompt_v2)
+    # print(f"✅ Standard Headings Map Groq: {standard_headings_map_groq}")
     
     # Get Standard headings Map from Valhalla DistilBART
     valhalla_standard_headers = build_map_with_model(cleaned_headers, distilbart_classifier, MODEL_THRESHOLD)
+
+    # print(f"\n ✅ Valhalla Standard Headings Map: {valhalla_standard_headers}")
 
     standard_headings_map = flatten_meta_map(valhalla_standard_headers)
 
@@ -129,46 +143,54 @@ def process_resume(pdf_bytes, experience, file_name):
     # -------------------------
     # BUILD SECTIONS
     # -------------------------
+
+    # detect if resume is single column or multi column
+    is_multi_column = detect_columns_advanced(pdf_path, max_pages=5).is_multicolumn
+    print("🔍 Is Multi Column: ", is_multi_column)
+
+    # build sections
     builder = SectionBuilder(cleaned_headers)
-    sections = builder.build(results["blocks"])
+    sections = builder.build(results["blocks"], is_multi_column)
 
     print(f"📦 Sections: {list(sections.keys())}")
-    with open(SECTIONS_OUTPUT_FILE_PATH, "w") as f:
-        json.dump(sections, f, indent=4)
+    # with open(SECTIONS_OUTPUT_FILE_PATH, "w") as f:
+    #     json.dump(sections, f, indent=4)
 
     print(f"💾 Section building complete. Sections saved to {SECTIONS_OUTPUT_FILE_PATH}")
     print(f"📦 Sections: {list(sections.keys())}")
 
     standard_sections = map_content_to_standard_header(sections, standard_headings_map)
 
-    with open(STANDARD_SECTIONS_OUTPUT_FILE_PATH, "w") as f:
-        json.dump(standard_sections, f, indent=4)
+    # with open(STANDARD_SECTIONS_OUTPUT_FILE_PATH, "w") as f:
+    #     json.dump(standard_sections, f, indent=4)
 
     # experience_and_projects_content = standard_sections.get("Experience", "") + " " + standard_sections.get("Projects", "")
     # print(f"✅ Experience and Projects Content: {experience_and_projects_content}")
 
     # ✅ Extract Experience + Projects using .get("text") and .get("bullets")
     exp_data = standard_sections.get("Experience", {})
+    # print(f"✅ Experience: {exp_data}")
     proj_data = standard_sections.get("Projects", {})
+    # print(f"✅ Projects: {proj_data}")
 
     experience_and_projects_content = (
         exp_data.get("text", "") + " " + proj_data.get("text", "")
     ).strip()
 
-    combined_list = exp_data.get("bullets", []) + proj_data.get("bullets", [])
+    # combined_list = exp_data.get("bullets", []) + proj_data.get("bullets", [])
 
-    bullet_analysis = save_useless_bullets(combined_list)
+    # bullet_analysis = save_useless_bullets(combined_list)
 
-    print("Useless Bullets:", bullet_analysis["useless_bullets"])
-    print("Total Useless:", bullet_analysis["total_useless"])
+    # print("Useless Bullets:", bullet_analysis["useless_bullets"])
+    # print("Total Useless:", bullet_analysis["total_useless"])
 
-    first_words = extract_first_words(combined_list)
-    print(f"🚀 First words extracted from bullets: \n{first_words}")
-    # print(first_words)
+    # first_words = extract_first_words(combined_list)
+    # print(f"🚀 First words extracted from bullets: \n{first_words}")
+    # # print(first_words)
 
-    action_words_result = analyze_first_words(first_words)
-    print(f"\n📃 Action Words Analysis Result: \n{action_words_result}")
-    print(action_words_result)
+    # action_words_result = analyze_first_words(first_words)
+    # print(f"\n📃 Action Words Analysis Result: \n{action_words_result}")
+    # print(action_words_result)
 
     # # ✅ Save to files
     # with open("experience_projects_text.txt", "w") as f:
@@ -180,6 +202,7 @@ def process_resume(pdf_bytes, experience, file_name):
 
     # INFORMATION MENU METRICS
     # action_words, total_action_words, all_action_words = get_action_words(resume_text) # full resume text
+    print(f"\n📄 Experience and Projects Content: \n{experience_and_projects_content}")
     action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content) # experience and projects content only
 
     print("Action Words:", action_words)
@@ -408,7 +431,7 @@ def process_resume(pdf_bytes, experience, file_name):
         "notRequired_Heading": notRequired_Heading,
         "standard_match_headings": standard_match_headings,
         "cleaned_headers": cleaned_headers,
-        "standard_headings_map_groq": standard_headings_map_groq,
+        # "standard_headings_map_groq": standard_headings_map_groq,
         "standard_headings_map": standard_headings_map,
         "action_words": action_words,
         "total_action_words": total_action_words,
@@ -498,8 +521,14 @@ if __name__ == "__main__":
     # For local testing    
     # SINGLE RESUME
     # convert local PDF to bytes
-    # pdf_path = "Puunita Chaturvedi.pdf"
-    # pdf_bytes = load_local_pdf(pdf_path)
+    # file_name = "Aagam_Shah_Resume.pdf"
+    # file_name = "ABISHEK Resume (Software) (2).pdf"
+    # file_name = "Ajeta Joshi Resume (1) (1).pdf"
+    # file_name = "Ajeta Joshi Resume (1) (1).pdf"
+    file_name = "AMISHA_CHOKSHI_Resume!.pdf"
+    # file_name = "Vinay_P_12042026 (1).pdf"
+    pdf_path = f"{DATA_DIR}/{file_name}"
+    pdf_bytes = load_local_pdf(pdf_path)
     
     # For S3 PDF
     # pdf_bytes, pdf_file2 = fetch_pdf_from_s3(
@@ -508,15 +537,16 @@ if __name__ == "__main__":
     #     os.getenv("AWS_SECRET_KEY")   #
     # )
     
-    # experience = 3
-    # file_name = "Ujjwal Tyagi.pdf"
+    experience = 3
+    file_name = "Ujjwal Tyagi.pdf"
 
-    # process_resume(pdf_bytes, experience, file_name)
+    output = process_resume(pdf_bytes, experience, file_name)
+
 
     # BULK RESUME
 
-    start_time = time.time()
-    analysis_results = process_multiple_resume()
+    # start_time = time.time()
+    # analysis_results = process_multiple_resume()
 
-    pd.DataFrame(analysis_results).to_csv("new_prompt_model_metrics_2704.csv", index=False)
-    print(f"📊 Total time taken: {time.time() - start_time:.2f} seconds")
+    # pd.DataFrame(analysis_results).to_csv("new_prompt_model_metrics_2704.csv", index=False)
+    # print(f"📊 Total time taken: {time.time() - start_time:.2f} seconds")

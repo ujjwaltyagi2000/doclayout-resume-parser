@@ -48,17 +48,22 @@ def build_map_with_model(cleaned_headers, classifier, threshold = 0.9):
                 best_header = header
         
         # apply threshold condition
-        if best_score >= threshold:
-            meta_map[std_label] = {
-                "header": best_header,
-                "score": float(best_score)
-            }
-        else:
-            meta_map[std_label] = {
-                "header": "",
-                "score": ""
-            }
+        # if best_score >= threshold:
+        #     meta_map[std_label] = {
+        #         "header": best_header,
+        #         "score": float(best_score)
+        #     }
+        # else:
+        #     meta_map[std_label] = {
+        #         "header": "",
+        #         "score": ""
+        #     }
 
+        # return without threshold
+        meta_map[std_label] = {
+            "header": best_header,
+            "score": float(best_score)
+        }
     return meta_map
 
 def flatten_meta_map(meta_map, drop_empty=True):

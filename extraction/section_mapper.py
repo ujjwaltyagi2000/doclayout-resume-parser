@@ -73,6 +73,7 @@ def combine_section_text(section_data):
 
     for item in section_data:
         if item.get("class_id") != 3:
+            print(f"⚠️ Skipping non-list-item: {item}")
             continue
 
         raw = item.get("text", "")
