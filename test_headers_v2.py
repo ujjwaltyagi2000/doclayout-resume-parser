@@ -1,3 +1,10 @@
+"""
+
+Test script to run resume in bulk with input to groq as text + y0 + y1 coordinates
+Also it uses another prompt to extract cleaned headers via Groq
+
+"""
+
 from groq_utils.cleaned_headers import filter_headers_with_groq, get_standard_headings_map
 from parsers.pdf_parser import load_local_pdf, fetch_pdf_from_s3, extract_full_text
 from extraction.section_mapper import map_content_to_standard_header, save_useless_bullets, get_mapped_section_text
@@ -32,7 +39,7 @@ MODEL_THRESHOLD = 0.9
 BATCH_SIZE = 10
 # DATA_DIR = "documents"
 DATA_DIR = "Check PDFs"
-OUTPUT_DIR = "sections_output"
+OUTPUT_DIR = "sections_output2"
 # OUTPUT_DIR = "output2"
 
 def map_yolo_headers_with_fonts(yolo_blocks, word_positions):
@@ -60,8 +67,14 @@ def map_yolo_headers_with_fonts(yolo_blocks, word_positions):
 
         enriched_headers.append({
             "text": header_text,
-            "font": font,
-            "y_position": block["y"]
+            # "font": font,
+            # "y_position": block["y"],
+            # "bbox": {
+            # "x0": block.get("x"),
+            "y0": block.get("y"),
+            # "x1": block.get("x") + block.get("width", 0),
+            "y1": block.get("y") + block.get("height", 0),
+            # },
         })
 
     return enriched_headers
@@ -104,11 +117,11 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
 
     # Map YOLO headers with fonts
     yolo_headers_with_fonts = map_yolo_headers_with_fonts(results["blocks"], word_positions)
-    # print(f"✅ YOLO Headers with Fonts: {yolo_headers_with_fonts}")
+    print(yolo_headers_with_fonts)
 
     # Filter Headers with Groq 
     # cleaned_headers = filter_headers_with_groq(linewise_content_with_fonts, cleaned_headers_prompt_template)
-    cleaned_headers = filter_headers_with_groq(yolo_headers_with_fonts, cleaned_headers_prompt_template_v3)
+    cleaned_headers = filter_headers_with_groq(yolo_headers_with_fonts, cleaned_headers_prompt_template_v5)
     print(f"✅ Cleaned Headers: {cleaned_headers}")
 
     # time.sleep(5)
@@ -580,6 +593,8 @@ def process_multiple_resume():
 
     # pdf_files = pdf_files[:100]
 
+    print(f"ENDING INDEX: {len(pdf_files)}")
+
     for idx, file_name in enumerate(pdf_files, start=1):
 
         if idx <= START_FROM:
@@ -628,29 +643,29 @@ def process_multiple_resume():
 
 if __name__ == "__main__":
 
-    # For local testing    
-    # SINGLE RESUME
-    # convert local PDF to bytes
-    # file_name = "Aagam_Shah_Resume.pdf"
-    # file_name = "ABISHEK Resume (Software) (2).pdf"
-    # file_name = "Ajeta Joshi Resume (1) (1).pdf"
-    # file_name = "Ajeta Joshi Resume (1) (1).pdf"
-    file_name = "Ashwiniresumee.pdf"
-    # file_name = "Vinay_P_12042026 (1).pdf"
-    pdf_path = f"{DATA_DIR}/{file_name}"
-    pdf_bytes = load_local_pdf(pdf_path)
+    # # For local testing    
+    # # SINGLE RESUME
+    # # convert local PDF to bytes
+    # # file_name = "Aagam_Shah_Resume.pdf"
+    # # file_name = "ABISHEK Resume (Software) (2).pdf"
+    # # file_name = "Ajeta Joshi Resume (1) (1).pdf"
+    # # file_name = "Ajeta Joshi Resume (1) (1).pdf"
+    # file_name = "Devu Siva Durga Sai.pdf"
+    # # file_name = "Vinay_P_12042026 (1).pdf"
+    # pdf_path = f"{DATA_DIR}/{file_name}"
+    # pdf_bytes = load_local_pdf(pdf_path)
     
-    # For S3 PDF
-    # pdf_bytes, pdf_file2 = fetch_pdf_from_s3(
-    #     "https://local-job-match-pro.s3.ap-south-2.amazonaws.com/e9168491d6ec8e5c0fcdaced9072de5b",
-    #     os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
-    #     os.getenv("AWS_SECRET_KEY")   #
-    # )
+    # # # For S3 PDF
+    # # # pdf_bytes, pdf_file2 = fetch_pdf_from_s3(
+    # # #     "https://local-job-match-pro.s3.ap-south-2.amazonaws.com/e9168491d6ec8e5c0fcdaced9072de5b",
+    # # #     os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
+    # # #     os.getenv("AWS_SECRET_KEY")   #
+    # # # )
     
-    experience = 3
-    # file_name = "Ujjwal Tyagi.pdf"
+    # experience = 3
+    # # file_name = "Ujjwal Tyagi.pdf"
 
-    output = process_resume(pdf_bytes, pdf_path, experience, file_name)
+    # output = process_resume(pdf_bytes, pdf_path, experience, file_name)
 
 
     # BULK RESUME
@@ -663,7 +678,6 @@ if __name__ == "__main__":
     # print(f"📊 Total time taken: {time.time() - start_time:.2f} seconds")
 
     # with batching
-
-    # start_time = time.time()
-    # process_multiple_resume()
-    # print(f"📊 Total time taken: {time.time() - start_time:.2f} seconds")
+    start_time = time.time()
+    process_multiple_resume()
+    print(f"📊 Total time taken: {time.time() - start_time:.2f} seconds")
