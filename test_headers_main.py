@@ -32,7 +32,10 @@ MODEL_THRESHOLD = 0.9
 BATCH_SIZE = 10
 # DATA_DIR = "documents"
 DATA_DIR = "Check PDFs"
-OUTPUT_DIR = "sections_output_1405"
+OUTPUT_DIR = "sections_output_1505"
+
+if not os.path.exists(OUTPUT_DIR):
+    os.makedirs(OUTPUT_DIR)
 # OUTPUT_DIR = "output2"
 
 def map_yolo_headers_with_fonts(yolo_blocks, word_positions):
@@ -101,6 +104,14 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
     # print(f"✅ Body Font Size: {max_font_size}, Words: {max_words}")
     print(f"✅ Font and Words: {font_and_words}")
     # print(f"✅ Linewise content with fonts: {linewise_content_with_fonts[:5]}")
+
+    has_same_font_size = False
+    same_font_size = None
+
+    if len(font_and_words) == 1:
+        has_same_font_size = True
+        same_font_size = font_and_words[0]["size"]
+        print(f"✅ All words have the same font size: {same_font_size}")
 
     # Map YOLO headers with fonts
     yolo_headers_with_fonts = map_yolo_headers_with_fonts(results["blocks"], word_positions)
@@ -186,6 +197,31 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
             if abs(h["font"] - max_recurring_font_size) > 1:
 
                 different_font_cleaned_headers.append(h)
+
+    # -----------------------------------
+    # 4. Split cleaned headers into:
+    #    A) dominant font size headers
+    #    B) different font size headers
+    # -----------------------------------
+
+    max_font_size_headers = []
+    different_font_size_headers = []
+
+    if max_recurring_font_size is not None:
+
+        for h in cleaned_header_objects:
+
+            if h["font"] is None:
+                continue
+
+            # same dominant font
+            if h["font"] == max_recurring_font_size:
+
+                max_font_size_headers.append(h)
+
+            else:
+
+                different_font_size_headers.append(h)
 
     # -----------------------------------
     # Debug prints
@@ -517,6 +553,8 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
         # "notRequired_Heading": notRequired_Heading,
         # "standard_match_headings": standard_match_headings,
         "is_multi_column": is_multi_column,
+        "has_same_font": has_same_font_size,
+        "same_font_size": same_font_size,
         "cleaned_headers": cleaned_headers,
         # "standard_headings_map_groq": standard_headings_map_groq,
         # "standard_headings_map": standard_headings_map,
@@ -524,6 +562,11 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
         # "sections": sections,
         # "standard_sections": standard_sections,
         "max_recurring_font_size": max_recurring_font_size,
+        "max_font_headers": str(max_font_size_headers),
+        "max_font_headers_count": len(max_font_size_headers),
+        "different_font_headers": str(different_font_size_headers),
+        "different_font_headers_count": len(different_font_size_headers),
+
         "max_font_missing_headers": str(max_font_missing_headers),
         "max_font_missing_headers_count": len(max_font_missing_headers),
         "different_font_cleaned_headers": str(different_font_cleaned_headers),
@@ -723,29 +766,29 @@ def process_multiple_resume():
 
 if __name__ == "__main__":
 
-    # For local testing    
-    # SINGLE RESUME
-    # convert local PDF to bytes
-    # file_name = "Aagam_Shah_Resume.pdf"
-    # file_name = "ABISHEK Resume (Software) (2).pdf"
-    # file_name = "Ajeta Joshi Resume (1) (1).pdf"
-    # file_name = "Ajeta Joshi Resume (1) (1).pdf"
-    file_name = "AMRUTHA - AEM RESUME.pdf"
-    # file_name = "Vinay_P_12042026 (1).pdf"
-    pdf_path = f"{DATA_DIR}/{file_name}"
-    pdf_bytes = load_local_pdf(pdf_path)
+    # # For local testing    
+    # # SINGLE RESUME
+    # # convert local PDF to bytes
+    # # file_name = "Aagam_Shah_Resume.pdf"
+    # # file_name = "ABISHEK Resume (Software) (2).pdf"
+    # # file_name = "Ajeta Joshi Resume (1) (1).pdf"
+    # # file_name = "Ajeta Joshi Resume (1) (1).pdf"
+    # file_name = "AMRUTHA - AEM RESUME.pdf"
+    # # file_name = "Vinay_P_12042026 (1).pdf"
+    # pdf_path = f"{DATA_DIR}/{file_name}"
+    # pdf_bytes = load_local_pdf(pdf_path)
     
-    # For S3 PDF
-    # pdf_bytes, pdf_file2 = fetch_pdf_from_s3(
-    #     "https://local-job-match-pro.s3.ap-south-2.amazonaws.com/e9168491d6ec8e5c0fcdaced9072de5b",
-    #     os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
-    #     os.getenv("AWS_SECRET_KEY")   #
-    # )
+    # # For S3 PDF
+    # # pdf_bytes, pdf_file2 = fetch_pdf_from_s3(
+    # #     "https://local-job-match-pro.s3.ap-south-2.amazonaws.com/e9168491d6ec8e5c0fcdaced9072de5b",
+    # #     os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
+    # #     os.getenv("AWS_SECRET_KEY")   #
+    # # )
     
-    experience = 3
-    # file_name = "Ujjwal Tyagi.pdf"
+    # experience = 3
+    # # file_name = "Ujjwal Tyagi.pdf"
 
-    output = process_resume(pdf_bytes, pdf_path, experience, file_name)
+    # output = process_resume(pdf_bytes, pdf_path, experience, file_name)
 
 
     # BULK RESUME
@@ -759,6 +802,6 @@ if __name__ == "__main__":
 
     # with batching
 
-    # start_time = time.time()
-    # process_multiple_resume()
-    # print(f"📊 Total time taken: {time.time() - start_time:.2f} seconds")
+    start_time = time.time()
+    process_multiple_resume()
+    print(f"📊 Total time taken: {time.time() - start_time:.2f} seconds")
