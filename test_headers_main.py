@@ -32,7 +32,7 @@ MODEL_THRESHOLD = 0.9
 BATCH_SIZE = 10
 # DATA_DIR = "documents"
 DATA_DIR = "Check PDFs"
-OUTPUT_DIR = "sections_output"
+OUTPUT_DIR = "sections_output_1405"
 # OUTPUT_DIR = "output2"
 
 def map_yolo_headers_with_fonts(yolo_blocks, word_positions):
@@ -99,106 +99,196 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
     # Filter Body Content
     linewise_content_with_fonts, font_and_words, max_font_size, max_words, word_positions = filter_body_content(pdf_bytes)
     # print(f"✅ Body Font Size: {max_font_size}, Words: {max_words}")
-    # print(f"✅ Font and Words: {font_and_words}")
+    print(f"✅ Font and Words: {font_and_words}")
     # print(f"✅ Linewise content with fonts: {linewise_content_with_fonts[:5]}")
 
     # Map YOLO headers with fonts
     yolo_headers_with_fonts = map_yolo_headers_with_fonts(results["blocks"], word_positions)
-    # print(f"✅ YOLO Headers with Fonts: {yolo_headers_with_fonts}")
+    print(f"✅ YOLO Headers with Fonts: {yolo_headers_with_fonts}")
 
     # Filter Headers with Groq 
     # cleaned_headers = filter_headers_with_groq(linewise_content_with_fonts, cleaned_headers_prompt_template)
     cleaned_headers = filter_headers_with_groq(yolo_headers_with_fonts, cleaned_headers_prompt_template_v3)
     print(f"✅ Cleaned Headers: {cleaned_headers}")
 
-    # time.sleep(5)
-    print("⏳ Getting Standard Headings Map...")
-    # Get Standard Headings Map from Groq
-    # standard_headings_map = get_standard_headings_map(cleaned_headers, standard_headings_prompt)
-    # print(f"✅ Standard Headings Map: {standard_headings_map}")
-    
-    # standard_headings_map_groq = get_standard_headings_map(cleaned_headers, standard_headings_prompt_v2)
-    # print(f"✅ Standard Headings Map Groq: {standard_headings_map_groq}")
-    
-    # Get Standard headings Map from Valhalla DistilBART
-    valhalla_standard_headers = build_map_with_model(cleaned_headers, distilbart_classifier, MODEL_THRESHOLD)
-
-    print(f"\n ✅ Valhalla Standard Headings Map: {valhalla_standard_headers}")
-
-    standard_headings_map = flatten_meta_map(valhalla_standard_headers)
-
-    print(f"✅ Standard Headings Map: {standard_headings_map}")
-
-    # Section Building
-
-    # ensure list type
-    import ast
     if isinstance(cleaned_headers, str):
+        import ast
         cleaned_headers = ast.literal_eval(cleaned_headers)
 
-    # -------------------------
-    # BUILD SECTIONS
-    # -------------------------
+    # TEST CODE TO FIND HEADERS THAT ARE WRONGFULLY MISSED OR INCLUDED
+    # =============================================================================================================
+
+    from collections import Counter
+
+    # -----------------------------------
+    # Normalize cleaned headers
+    # -----------------------------------
+    cleaned_headers_set = set(h.strip() for h in cleaned_headers)
+
+    # -----------------------------------
+    # Get cleaned header objects
+    # -----------------------------------
+    cleaned_header_objects = []
+
+    for h in yolo_headers_with_fonts:
+
+        if h["text"].strip() in cleaned_headers_set:
+            cleaned_header_objects.append(h)
+
+    # -----------------------------------
+    # 1. Max recurring font size
+    #    ONLY from cleaned headers
+    # -----------------------------------
+    cleaned_fonts = [
+        h["font"]
+        for h in cleaned_header_objects
+        if h["font"] is not None
+    ]
+
+    font_counter = Counter(cleaned_fonts)
+
+    max_recurring_font_size = None
+
+    if font_counter:
+        max_recurring_font_size = font_counter.most_common(1)[0][0]
+
+    # -----------------------------------
+    # 2. Headers in YOLO input
+    #    having same dominant font
+    #    BUT missing from cleaned headers
+    # -----------------------------------
+    max_font_missing_headers = []
+
+    if max_recurring_font_size is not None:
+
+        for h in yolo_headers_with_fonts:
+
+            if h["font"] == max_recurring_font_size:
+
+                if h["text"].strip() not in cleaned_headers_set:
+
+                    max_font_missing_headers.append(h)
+
+    # -----------------------------------
+    # 3. Headers PRESENT in cleaned headers
+    #    BUT font size NOT same (+/-1 excluded)
+    # -----------------------------------
+    different_font_cleaned_headers = []
+
+    if max_recurring_font_size is not None:
+
+        for h in cleaned_header_objects:
+
+            if h["font"] is None:
+                continue
+
+            # NOT within +/-1
+            if abs(h["font"] - max_recurring_font_size) > 1:
+
+                different_font_cleaned_headers.append(h)
+
+    # -----------------------------------
+    # Debug prints
+    # -----------------------------------
+    print("\n✅ Max Recurring Font Size (from cleaned headers):")
+    print(max_recurring_font_size)
+
+    print("\n❌ Same Font Headers Missing From Cleaned Headers:")
+    print(max_font_missing_headers)
+
+    print("\n⚠️ Cleaned Headers Having Different Font Size:")
+    print(different_font_cleaned_headers)
+    # =============================================================================================================
+
+
+    # time.sleep(5)
+    # print("⏳ Getting Standard Headings Map...")
+    # # Get Standard Headings Map from Groq
+    # # standard_headings_map = get_standard_headings_map(cleaned_headers, standard_headings_prompt)
+    # # print(f"✅ Standard Headings Map: {standard_headings_map}")
+    
+    # # standard_headings_map_groq = get_standard_headings_map(cleaned_headers, standard_headings_prompt_v2)
+    # # print(f"✅ Standard Headings Map Groq: {standard_headings_map_groq}")
+    
+    # # Get Standard headings Map from Valhalla DistilBART
+    # valhalla_standard_headers = build_map_with_model(cleaned_headers, distilbart_classifier, MODEL_THRESHOLD)
+
+    # print(f"\n ✅ Valhalla Standard Headings Map: {valhalla_standard_headers}")
+
+    # standard_headings_map = flatten_meta_map(valhalla_standard_headers)
+
+    # print(f"✅ Standard Headings Map: {standard_headings_map}")
+
+    # # Section Building
+
+    # # ensure list type
+    # import ast
+    # if isinstance(cleaned_headers, str):
+    #     cleaned_headers = ast.literal_eval(cleaned_headers)
+
+    # # -------------------------
+    # # BUILD SECTIONS
+    # # -------------------------
 
     # detect if resume is single column or multi column
     is_multi_column = detect_columns_advanced(pdf_path, max_pages=5).is_multicolumn
     print("🔍 Is Multi Column: ", is_multi_column)
 
-    # build sections
-    builder = SectionBuilder(cleaned_headers)
-    sections = builder.build(results["blocks"], is_multi_column)
+    # # build sections
+    # builder = SectionBuilder(cleaned_headers)
+    # sections = builder.build(results["blocks"], is_multi_column)
 
-    print(f"📦 Sections: {list(sections.keys())}")
-    # with open(SECTIONS_OUTPUT_FILE_PATH, "w") as f:
-    #     json.dump(sections, f, indent=4)
+    # print(f"📦 Sections: {list(sections.keys())}")
+    # # with open(SECTIONS_OUTPUT_FILE_PATH, "w") as f:
+    # #     json.dump(sections, f, indent=4)
 
-    print(f"💾 Section building complete. Sections saved to {SECTIONS_OUTPUT_FILE_PATH}")
-    print(f"📦 Sections: {list(sections.keys())}")
+    # print(f"💾 Section building complete. Sections saved to {SECTIONS_OUTPUT_FILE_PATH}")
+    # print(f"📦 Sections: {list(sections.keys())}")
 
-    standard_sections = map_content_to_standard_header(sections, standard_headings_map)
+    # standard_sections = map_content_to_standard_header(sections, standard_headings_map)
 
-    # with open(STANDARD_SECTIONS_OUTPUT_FILE_PATH, "w") as f:
-    #     json.dump(standard_sections, f, indent=4)
+    # # with open(STANDARD_SECTIONS_OUTPUT_FILE_PATH, "w") as f:
+    # #     json.dump(standard_sections, f, indent=4)
 
-    # experience_and_projects_content = standard_sections.get("Experience", "") + " " + standard_sections.get("Projects", "")
-    # print(f"✅ Experience and Projects Content: {experience_and_projects_content}")
+    # # experience_and_projects_content = standard_sections.get("Experience", "") + " " + standard_sections.get("Projects", "")
+    # # print(f"✅ Experience and Projects Content: {experience_and_projects_content}")
 
-    # ✅ Extract Experience + Projects using .get("text") and .get("bullets")
-    exp_data = standard_sections.get("Experience", {})
-    # print(f"✅ Experience: {exp_data}")
-    proj_data = standard_sections.get("Projects", {})
-    # print(f"✅ Projects: {proj_data}")
+    # # ✅ Extract Experience + Projects using .get("text") and .get("bullets")
+    # exp_data = standard_sections.get("Experience", {})
+    # # print(f"✅ Experience: {exp_data}")
+    # proj_data = standard_sections.get("Projects", {})
+    # # print(f"✅ Projects: {proj_data}")
 
-    experience_and_projects_content = (
-        exp_data.get("text", "") + " " + proj_data.get("text", "")
-    ).strip()
+    # experience_and_projects_content = (
+    #     exp_data.get("text", "") + " " + proj_data.get("text", "")
+    # ).strip()
 
-    # combined_list = exp_data.get("bullets", []) + proj_data.get("bullets", [])
+    # # combined_list = exp_data.get("bullets", []) + proj_data.get("bullets", [])
 
-    # bullet_analysis = save_useless_bullets(combined_list)
+    # # bullet_analysis = save_useless_bullets(combined_list)
 
-    # print("Useless Bullets:", bullet_analysis["useless_bullets"])
-    # print("Total Useless:", bullet_analysis["total_useless"])
+    # # print("Useless Bullets:", bullet_analysis["useless_bullets"])
+    # # print("Total Useless:", bullet_analysis["total_useless"])
 
-    # first_words = extract_first_words(combined_list)
-    # print(f"🚀 First words extracted from bullets: \n{first_words}")
-    # # print(first_words)
+    # # first_words = extract_first_words(combined_list)
+    # # print(f"🚀 First words extracted from bullets: \n{first_words}")
+    # # # print(first_words)
 
-    # action_words_result = analyze_first_words(first_words)
-    # print(f"\n📃 Action Words Analysis Result: \n{action_words_result}")
-    # print(action_words_result)
+    # # action_words_result = analyze_first_words(first_words)
+    # # print(f"\n📃 Action Words Analysis Result: \n{action_words_result}")
+    # # print(action_words_result)
 
-    # # ✅ Save to files
-    # with open("experience_projects_text.txt", "w") as f:
-    #     f.write(experience_and_projects_content)
+    # # # ✅ Save to files
+    # # with open("experience_projects_text.txt", "w") as f:
+    # #     f.write(experience_and_projects_content)
 
-    # with open("experience_projects_bullets.txt", "w") as f:
-    #     for index, bullet in enumerate(combined_list):
-    #         f.write(f"[{index + 1}] {bullet}\n")
+    # # with open("experience_projects_bullets.txt", "w") as f:
+    # #     for index, bullet in enumerate(combined_list):
+    # #         f.write(f"[{index + 1}] {bullet}\n")
 
-    # INFORMATION MENU METRICS
-    # action_words, total_action_words, all_action_words = get_action_words(resume_text) # full resume text
-    print(f"\n📄 Experience and Projects Content: \n{experience_and_projects_content}")
+    # # INFORMATION MENU METRICS
+    # # action_words, total_action_words, all_action_words = get_action_words(resume_text) # full resume text
+    # print(f"\n📄 Experience and Projects Content: \n{experience_and_projects_content}")
     # action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content) # experience and projects content only
 
     # print("Action Words:", action_words)
@@ -422,17 +512,22 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
     # save outputs to a file
     output_data = {
         "File Name": file_name,
-        "headings": headings,
+        # "headings": headings,
         "subHeadings": subHeadings,
-        "notRequired_Heading": notRequired_Heading,
-        "standard_match_headings": standard_match_headings,
+        # "notRequired_Heading": notRequired_Heading,
+        # "standard_match_headings": standard_match_headings,
         "is_multi_column": is_multi_column,
         "cleaned_headers": cleaned_headers,
         # "standard_headings_map_groq": standard_headings_map_groq,
-        "standard_headings_map": standard_headings_map,
-        "sh_map_scores": valhalla_standard_headers,
-        "sections": sections,
-        "standard_sections": standard_sections,
+        # "standard_headings_map": standard_headings_map,
+        # "sh_map_scores": valhalla_standard_headers,
+        # "sections": sections,
+        # "standard_sections": standard_sections,
+        "max_recurring_font_size": max_recurring_font_size,
+        "max_font_missing_headers": str(max_font_missing_headers),
+        "max_font_missing_headers_count": len(max_font_missing_headers),
+        "different_font_cleaned_headers": str(different_font_cleaned_headers),
+        "different_font_cleaned_headers_count": len(different_font_cleaned_headers),
         # "action_words": action_words,
         # "total_action_words": total_action_words,
         # "all_action_words": all_action_words,
@@ -578,7 +673,7 @@ def process_multiple_resume():
     pdf_files = [f for f in os.listdir(DATA_DIR) if f.endswith(".pdf")]
     pdf_files.sort()  # IMPORTANT: keep order consistent
 
-    # pdf_files = pdf_files[:100]
+    pdf_files = pdf_files[:100]
 
     for idx, file_name in enumerate(pdf_files, start=1):
 
@@ -635,7 +730,7 @@ if __name__ == "__main__":
     # file_name = "ABISHEK Resume (Software) (2).pdf"
     # file_name = "Ajeta Joshi Resume (1) (1).pdf"
     # file_name = "Ajeta Joshi Resume (1) (1).pdf"
-    file_name = "Ashwiniresumee.pdf"
+    file_name = "AMRUTHA - AEM RESUME.pdf"
     # file_name = "Vinay_P_12042026 (1).pdf"
     pdf_path = f"{DATA_DIR}/{file_name}"
     pdf_bytes = load_local_pdf(pdf_path)
