@@ -20,3 +20,5 @@ counter_test.py
 *.csv
 *.txt
 Check PDFs/
+*.xlsx
+*ipynb

@@ -1,8 +1,8 @@
 import os
 import pandas as pd
 
-OUTPUT_DIR = "output"  # change this
-FINAL_FILE = os.path.join(OUTPUT_DIR, "merged_results.csv")
+OUTPUT_DIR = "sections_output_2105"  # change this
+FINAL_FILE = os.path.join(OUTPUT_DIR, "original_prompt_results_2105.csv")
 
 def merge_csv_files():
     all_dfs = []

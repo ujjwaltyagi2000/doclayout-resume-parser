@@ -424,50 +424,8 @@ If every item in the input is a name, date, company, job title, or other non-res
 Do NOT invent, infer, or generate any header that does not appear word-for-word in the input. When in doubt, return [].
 
 """
+
 cleaned_headers_prompt_template_v4 = """
-Extract valid resume section headers from this list: {headers}
-
-```
-Each List Item contains two fields: 
-1. Header Text
-2. Y coordinate (vertical position within the document)
-
-Rules:
-
-```
-
-1. Use Y coordinate and Text Pattern as primary signals:
-* Focus on items that act as structural anchors (major vertical breaks) in the document.
-* Typical section headers (e.g., "EXPERIENCE", "EDUCATION") usually occupy their own Y coordinate space without being inline with long sentences.
-
-
-2. Remove duplicates
-3. Return ONLY a Python list, nothing else
-4. Important Remove:
-* Remove Person name (any name-like header)
-* Remove names, dates, company names, and project details
-* Remove Company names, job titles, project titles
-* Remove Dates, locations, degree/program lines (e.g., “MBA Finance…”, “Apr 2022 - Sep 2023”)
-* Anything that looks like body content, bullet points, or contact info rather than a section label
-
-
-5. Output must preserve the header text EXACTLY as it appears in the input (same casing/spelling).
-* Do NOT rewrite, normalize, or expand headers.
-* Do NOT invent new headers.
-
-
-6. Important to remember: Return an empty list [] if you believe no valid section headings exist, since you are a resume expert.
-IMPORTANT: Your entire response must be ONLY the list in this exact format:
-['Header1', 'Header2', 'Header3']
-Do not include explanations, code, markdown, or any other text.
-If you don't find any valid headers, return []. Do not give any headers that do not really exist in the input.
-
-CRITICAL ANTI-HALLUCINATION RULE: You may ONLY return headers that are verbatim present in the input list above.
-If every item in the input is a name, date, company, job title, or other non-resume section content, you MUST return [].
-Do NOT invent, infer, or generate any header that does not appear word-for-word in the input.
-"""
-
-cleaned_headers_prompt_template_v5 = """
 
 Extract valid resume section headers from this list: {headers}
 
@@ -503,6 +461,70 @@ CRITICAL ANTI-HALLUCINATION RULE: You may ONLY return headers that are verbatim 
 If every item in the input is a name, date, company, job title, or other non-resume section content, you MUST return [].
 Do NOT invent, infer, or generate any header that does not appear word-for-word in the input. When in doubt, return [].
 
+"""
+
+# NEW PROMPT TO INCLUDE PROJECT HEADINGS BUT EXCLUDE PROJECT TITLES
+cleaned_headers_prompt_template_v5 = """
+Extract valid resume section headers from this list: {headers}
+    Each List Item contains three fields: 
+    1. Header Text
+    2. Font Size
+    3. Y co-ordinate (within document)
+    Rules:
+1) Use font size + heading level as primary signals:
+    - Larger font sizes and lower levels (e.g., L1) are more likely to be real section headers.
+    - Smaller font sizes and deeper levels (e.g., L3/L4) are often subheadings, roles, companies, projects, or details — exclude them.
+    - Suppose 3/4 font sizes look to be section headings in that case, we can consider all similar font sizes to be section headinds
+2) Remove duplicates
+3) Return ONLY a Python list, nothing else
+4) Important Remove:
+    - remove Person name (any name-like header)
+    - Remove names, dates, company names, and project details
+    - Company names, job titles
+    - Individual project titles (e.g., "E-Commerce Website", "Chat Application") — but KEEP section-level headers like "Projects", "Academic Projects", "Personal Projects", "Key Projects", "Hands on projects", etc.
+    - Dates, locations, degree/program lines (e.g., "MBA Finance…", "Apr 2022 - Sep 2023")
+    - Anything that looks like content rather than a section label
+6) Output must preserve the header text EXACTLY as it appears in the input (same casing/spelling).
+    - Do NOT rewrite, normalize, or expand headers.
+    - Do NOT invent new headers.
+7) Important to remeber Return null if you beleive no valid result as output of section heading, since you are a resume expert
+    IMPORTANT: Your entire response must be ONLY the list in this exact format:
+    ['Header1', 'Header2', 'Header3']
+    Do not include explanations, code, markdown, or any other text.
+If you don't find any valid headers, return an empty list. Do not give any headers that do not really exist.
+CRITICAL ANTI-HALLUCINATION RULE: You may ONLY return headers that are verbatim present in the input list above.
+If every item in the input is a name, date, company, job title, or other non-resume section content, you MUST return [].
+Do NOT invent, infer, or generate any header that does not appear word-for-word in the input. When in doubt, return [].
+"""
+cleaned_headers_prompt_template_v6 = """
+Extract valid resume section headers as a top resume expert from this list:  {headers}
+Each List Item contains three fields: 
+1. Header Text
+2. Font Size
+3. Y co-ordinate (within document)
+Rules:
+    1. Use font size + heading level as primary signals:
+        ◦ Find headers which looks similar to a resume section heading and find other similar font sizes
+    2. Remove duplicates
+    3. Return ONLY a Python list, nothing else
+    4. Important Remove:
+        ◦ remove Person name (any name-like header)
+        ◦ Remove names, dates, company names, and project details
+        ◦ Company names, job titles
+        ◦ Individual project titles (e.g., "E-Commerce Website", "Chat Application") — but KEEP section-level headers like "Projects", "Academic Projects", "Personal Projects", "Key Projects", "Hands on projects", etc.
+        ◦ Dates, locations, degree/program lines (e.g., "MBA Finance…", "Apr 2022 - Sep 2023")
+        ◦ strictly remove Anything that looks like content with different font size rather than a section label
+    5. Output must preserve the header text EXACTLY as it appears in the input (same casing/spelling).
+        ◦ Do NOT rewrite, normalize, or expand headers.
+        ◦ Do NOT invent new headers.
+    6. Important to remember Return null if you believe no valid result as output of section heading, since you are a resume expert 
+    IMPORTANT: Your entire response must be ONLY the list in this exact format: ['Header1', 'Header2', 'Header3'] 
+    Do not include explanations, code, markdown, or any other text. 
+    If you don't find any valid headers, return an empty list. 
+    Do not give any headers that do not really exist. 
+    CRITICAL ANTI-HALLUCINATION RULE: You may ONLY return headers that are verbatim present in the input list above considering their font sizes 
+    If every item in the input is a name, date, company, job title, or other non-resume section content, you MUST return []. 
+    Do NOT invent, infer, or generate any header that does not appear word-for-word in the input. When in doubt, return [].
 """
 
 # ✅ CURRENT WORKING PROMPT FOR SECTION MAPPING

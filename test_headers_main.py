@@ -23,8 +23,10 @@ from groq_utils.prompts import *
 from config.settings import *
 from check_multi_colsv2 import detect_columns_advanced
 import pandas as pd
+import ahocorasick
 import time
 import json
+import re
 import os
 # from groq_utils.resuscan_groq import filter_body_content, filter_headers_with_groq
 
@@ -32,11 +34,85 @@ MODEL_THRESHOLD = 0.9
 BATCH_SIZE = 10
 # DATA_DIR = "documents"
 DATA_DIR = "Check PDFs"
-OUTPUT_DIR = "sections_output_1505"
+OUTPUT_DIR = "sections_output_2105"
+
+SECTIONS_DIR = f"{OUTPUT_DIR}/sections"
 
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 # OUTPUT_DIR = "output2"
+
+# -----------------------------------
+# Normalize helper
+# -----------------------------------
+def normalize_text(text):
+    text = str(text).strip().lower()
+
+    # replace &, / etc with space
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+
+    # collapse spaces
+    text = re.sub(r"\s+", " ", text)
+
+    return text.strip()
+
+# -----------------------------------
+# Build Automaton
+# -----------------------------------
+def build_header_automaton(file_path):
+
+    df = pd.read_excel(file_path)
+
+    # second column
+    keywords = df.iloc[:, 1].dropna().astype(str).tolist()
+
+    A = ahocorasick.Automaton()
+
+    for keyword in keywords:
+
+        normalized_keyword = normalize_text(keyword)
+
+        if normalized_keyword:
+            A.add_word(normalized_keyword, keyword)
+
+    A.make_automaton()
+
+    return A
+
+HEADER_AUTOMATON = build_header_automaton(
+    "https://s3.ap-south-1.amazonaws.com/mployee.me/keywords_list/Headlines.xlsx"
+)
+
+# -----------------------------------
+# Match headers against automaton
+# -----------------------------------
+def match_headers_with_automaton(headers, automaton):
+
+    matched_headers = []
+
+    for h in headers:
+
+        text = h["text"]
+        normalized_text = normalize_text(text)
+
+        found_match = False
+
+        for _, matched_keyword in automaton.iter(normalized_text):
+
+            # exact normalized match only
+            if normalize_text(matched_keyword) == normalized_text:
+
+                matched_headers.append({
+                    "text": text,
+                    "font": h["font"],
+                    "y_position": h["y_position"],
+                    "matched_keyword": matched_keyword
+                })
+
+                found_match = True
+                break
+
+    return matched_headers
 
 def map_yolo_headers_with_fonts(yolo_blocks, word_positions):
     enriched_headers = []
@@ -119,7 +195,7 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
 
     # Filter Headers with Groq 
     # cleaned_headers = filter_headers_with_groq(linewise_content_with_fonts, cleaned_headers_prompt_template)
-    cleaned_headers = filter_headers_with_groq(yolo_headers_with_fonts, cleaned_headers_prompt_template_v3)
+    cleaned_headers, prompt_tokens, completion_tokens, total_tokens = filter_headers_with_groq(yolo_headers_with_fonts, cleaned_headers_prompt_template_v3)
     print(f"✅ Cleaned Headers: {cleaned_headers}")
 
     if isinstance(cleaned_headers, str):
@@ -224,8 +300,24 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
                 different_font_size_headers.append(h)
 
     # -----------------------------------
+    # Match missing same-font headers
+    # against keyword automaton
+    # -----------------------------------
+
+    matched_headers_from_groq_input = match_headers_with_automaton(
+        max_font_missing_headers,
+        HEADER_AUTOMATON
+    )
+
+    print("\n✅ Matched Headers From Groq Input:")
+    print(matched_headers_from_groq_input)
+
+    # -----------------------------------
     # Debug prints
     # -----------------------------------
+    print(f"\n📄 Max font size headers: \n{max_font_size_headers}")
+    print(f"\n🔃 Different font size headers: \n{different_font_size_headers}")
+
     print("\n✅ Max Recurring Font Size (from cleaned headers):")
     print(max_recurring_font_size)
 
@@ -239,14 +331,14 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
 
     # time.sleep(5)
     # print("⏳ Getting Standard Headings Map...")
-    # # Get Standard Headings Map from Groq
-    # # standard_headings_map = get_standard_headings_map(cleaned_headers, standard_headings_prompt)
-    # # print(f"✅ Standard Headings Map: {standard_headings_map}")
+    # Get Standard Headings Map from Groq
+    # standard_headings_map = get_standard_headings_map(cleaned_headers, standard_headings_prompt)
+    # print(f"✅ Standard Headings Map: {standard_headings_map}")
     
-    # # standard_headings_map_groq = get_standard_headings_map(cleaned_headers, standard_headings_prompt_v2)
-    # # print(f"✅ Standard Headings Map Groq: {standard_headings_map_groq}")
+    # standard_headings_map_groq = get_standard_headings_map(cleaned_headers, standard_headings_prompt_v2)
+    # print(f"✅ Standard Headings Map Groq: {standard_headings_map_groq}")
     
-    # # Get Standard headings Map from Valhalla DistilBART
+    # Get Standard headings Map from Valhalla DistilBART
     # valhalla_standard_headers = build_map_with_model(cleaned_headers, distilbart_classifier, MODEL_THRESHOLD)
 
     # print(f"\n ✅ Valhalla Standard Headings Map: {valhalla_standard_headers}")
@@ -255,12 +347,12 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
 
     # print(f"✅ Standard Headings Map: {standard_headings_map}")
 
-    # # Section Building
+    # Section Building
 
-    # # ensure list type
-    # import ast
-    # if isinstance(cleaned_headers, str):
-    #     cleaned_headers = ast.literal_eval(cleaned_headers)
+    # ensure list type
+    import ast
+    if isinstance(cleaned_headers, str):
+        cleaned_headers = ast.literal_eval(cleaned_headers)
 
     # # -------------------------
     # # BUILD SECTIONS
@@ -270,16 +362,21 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
     is_multi_column = detect_columns_advanced(pdf_path, max_pages=5).is_multicolumn
     print("🔍 Is Multi Column: ", is_multi_column)
 
-    # # build sections
-    # builder = SectionBuilder(cleaned_headers)
-    # sections = builder.build(results["blocks"], is_multi_column)
+    # build sections
+    builder = SectionBuilder(cleaned_headers)
+    sections = builder.build(results["blocks"], is_multi_column)
 
-    # print(f"📦 Sections: {list(sections.keys())}")
-    # # with open(SECTIONS_OUTPUT_FILE_PATH, "w") as f:
-    # #     json.dump(sections, f, indent=4)
+    print(f"📦 Sections: {list(sections.keys())}")
 
-    # print(f"💾 Section building complete. Sections saved to {SECTIONS_OUTPUT_FILE_PATH}")
-    # print(f"📦 Sections: {list(sections.keys())}")
+    clean_file_name = file_name.removesuffix(".pdf")
+
+    with open(f"{SECTIONS_DIR}/{clean_file_name}.json", "w") as f:
+        json.dump(sections, f, indent=4)
+    # with open(SECTIONS_OUTPUT_FILE_PATH, "w") as f:
+    #     json.dump(sections, f, indent=4)
+
+    print(f"💾 Section building complete. Sections saved to {SECTIONS_OUTPUT_FILE_PATH}")
+    print(f"📦 Sections: {list(sections.keys())}")
 
     # standard_sections = map_content_to_standard_header(sections, standard_headings_map)
 
@@ -571,6 +668,11 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
         "max_font_missing_headers_count": len(max_font_missing_headers),
         "different_font_cleaned_headers": str(different_font_cleaned_headers),
         "different_font_cleaned_headers_count": len(different_font_cleaned_headers),
+        "matched_headers_from_groq_input": str(matched_headers_from_groq_input),
+        "matched_headers_from_groq_input_count": len(matched_headers_from_groq_input),
+        "prompt_tokens": prompt_tokens,
+        "completion_tokens": completion_tokens,
+        "total_tokens": total_tokens,
         # "action_words": action_words,
         # "total_action_words": total_action_words,
         # "all_action_words": all_action_words,
@@ -707,7 +809,7 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
 #     return
 
 # START_FROM = 140  # already processed
-START_FROM = 0  # already processed
+START_FROM = 150  # already processed
 
 def process_multiple_resume():
     analysis_results = []
@@ -716,7 +818,7 @@ def process_multiple_resume():
     pdf_files = [f for f in os.listdir(DATA_DIR) if f.endswith(".pdf")]
     pdf_files.sort()  # IMPORTANT: keep order consistent
 
-    pdf_files = pdf_files[:100]
+    pdf_files = pdf_files[:200]
 
     for idx, file_name in enumerate(pdf_files, start=1):
 
@@ -768,13 +870,7 @@ if __name__ == "__main__":
 
     # # For local testing    
     # # SINGLE RESUME
-    # # convert local PDF to bytes
-    # # file_name = "Aagam_Shah_Resume.pdf"
-    # # file_name = "ABISHEK Resume (Software) (2).pdf"
-    # # file_name = "Ajeta Joshi Resume (1) (1).pdf"
-    # # file_name = "Ajeta Joshi Resume (1) (1).pdf"
-    # file_name = "AMRUTHA - AEM RESUME.pdf"
-    # # file_name = "Vinay_P_12042026 (1).pdf"
+    # file_name = "HariPrasathVR.pdf"
     # pdf_path = f"{DATA_DIR}/{file_name}"
     # pdf_bytes = load_local_pdf(pdf_path)
     
@@ -786,7 +882,7 @@ if __name__ == "__main__":
     # # )
     
     # experience = 3
-    # # file_name = "Ujjwal Tyagi.pdf"
+    # file_name = "Ujjwal Tyagi.pdf"
 
     # output = process_resume(pdf_bytes, pdf_path, experience, file_name)
 

@@ -28,8 +28,15 @@ def filter_headers_with_groq(headers, prompt_template):
     )
 
     cleaned_headers = response.choices[0].message.content
+    print("Prompt Tokens:", response.usage.prompt_tokens)
+    print("Completion Tokens:", response.usage.completion_tokens)
+    print("Total Tokens:", response.usage.total_tokens)
 
-    return cleaned_headers
+    prompt_tokens = response.usage.prompt_tokens
+    completion_tokens = response.usage.completion_tokens
+    total_tokens = response.usage.total_tokens
+
+    return cleaned_headers, prompt_tokens, completion_tokens, total_tokens
 
 def get_standard_headings_map(cleaned_headers, prompt_template):
 
