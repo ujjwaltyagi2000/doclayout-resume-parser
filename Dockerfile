@@ -29,4 +29,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 4. Copy code
 COPY . .
 
-CMD [ "build_sections_with_groq_headings.handler" ]
+CMD [ "new_lambda.handler" ]

@@ -1,11 +1,12 @@
 from transformers import pipeline
+import ast
 
 
-# Existing model --> ❌ Rejected
-zero_shot_classifier = pipeline(
-    "zero-shot-classification",
-    model="facebook/bart-large-mnli"
-)
+# # Existing model --> ❌ Rejected
+# zero_shot_classifier = pipeline(
+#     "zero-shot-classification",
+#     model="facebook/bart-large-mnli"
+# )
 
 # NEW model --> ✅ Approved for final use
 distilbart_classifier = pipeline(
@@ -13,17 +14,38 @@ distilbart_classifier = pipeline(
     model="valhalla/distilbart-mnli-12-1"
 )
 
+# STANDARD_HEADERS = [
+#     "Summary", "Experience", "Projects",
+#     "Trainings", "Certifications",
+#     "Achievements", "Volunteer"
+# ]
+
 STANDARD_HEADERS = [
-    "Summary", "Experience", "Projects",
-    "Trainings", "Certifications",
-    "Achievements", "Volunteer"
+    "Objective",
+    "Professional Summary",
+    "Professional Experience",
+    "Work History",
+    "Work Experience",
+    "Education",
+    "Volunteer Experience",
+    "Publications",
+    "Presentations",
+    "Certifications",
+    "Achievements",
+    "Position of Responsibility",
+    "Awards",
+    "Projects",
+    "Certification",
+    "Project",
+    "Research Paper",
+    "Extra-Curricular Activities",
+    "Declaration"
 ]
 
-def build_map_with_model(cleaned_headers, classifier, threshold = 0.9):
+def build_map_with_model(cleaned_headers, classifier, threshold=0.9):
     meta_map = {}
 
     if isinstance(cleaned_headers, str):
-        import ast
         cleaned_headers = ast.literal_eval(cleaned_headers)
 
     for std_label in STANDARD_HEADERS:
@@ -39,31 +61,36 @@ def build_map_with_model(cleaned_headers, classifier, threshold = 0.9):
             )
 
             score = result["scores"][0]
-            
-            # for debugging
-            # print("🔍", header, std_label, score)
+
+            # Debugging
+            # print("🔍", header, "→", std_label, "=", score)
 
             if score > best_score:
                 best_score = score
                 best_header = header
-        
-        # apply threshold condition
-        # if best_score >= threshold:
-        #     meta_map[std_label] = {
-        #         "header": best_header,
-        #         "score": float(best_score)
-        #     }
-        # else:
-        #     meta_map[std_label] = {
-        #         "header": "",
-        #         "score": ""
-        #     }
 
-        # return without threshold
-        meta_map[std_label] = {
-            "header": best_header,
-            "score": float(best_score)
-        }
+        # =========================================================
+        # OPTION 1 → Always choose BEST MATCH (even low confidence)
+        # =========================================================
+        # meta_map[std_label] = {
+        #     "header": best_header,
+        #     "score": float(best_score)
+        # }
+
+        # =========================================================
+        # OPTION 2 → Only choose if score >= threshold
+        # =========================================================
+        if best_score >= threshold:
+            meta_map[std_label] = {
+                "header": best_header,
+                "score": float(best_score)
+            }
+        else:
+            meta_map[std_label] = {
+                "header": "",
+                "score": ""
+            }
+
     return meta_map
 
 def flatten_meta_map(meta_map, drop_empty=True):

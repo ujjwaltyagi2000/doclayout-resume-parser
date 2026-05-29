@@ -34,13 +34,36 @@ MODEL_THRESHOLD = 0.9
 BATCH_SIZE = 10
 # DATA_DIR = "documents"
 DATA_DIR = "Check PDFs"
-OUTPUT_DIR = "sections_output_2105"
+OUTPUT_DIR = "sections_output_2605"
 
 SECTIONS_DIR = f"{OUTPUT_DIR}/sections"
 
 if not os.path.exists(OUTPUT_DIR):
     os.makedirs(OUTPUT_DIR)
 # OUTPUT_DIR = "output2"
+
+import pandas as pd
+import os
+import ast
+
+# Load all batch CSVs into one lookup dict: {file_name -> cleaned_headers}
+def load_processed_headers(output_dir):
+    cache = {}
+    for f in os.listdir(output_dir):
+        if f.endswith(".csv"):
+            df = pd.read_csv(os.path.join(output_dir, f))
+            for _, row in df.iterrows():
+                fname = row["File Name"]
+                try:
+                    headers = ast.literal_eval(row["cleaned_headers"])
+                except:
+                    headers = []
+                cache[fname] = headers
+    return cache
+
+PROCESSED_HEADERS_CACHE = load_processed_headers(OUTPUT_DIR)
+
+pd.DataFrame(list(PROCESSED_HEADERS_CACHE.items()), columns=["File Name", "cleaned_headers"]).to_csv("processed_headers.csv", index=False)
 
 # -----------------------------------
 # Normalize helper
@@ -177,9 +200,9 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
 
     # Filter Body Content
     linewise_content_with_fonts, font_and_words, max_font_size, max_words, word_positions = filter_body_content(pdf_bytes)
-    # print(f"✅ Body Font Size: {max_font_size}, Words: {max_words}")
+    print(f"✅ Body Font Size: {max_font_size}, Words: {max_words}")
     print(f"✅ Font and Words: {font_and_words}")
-    # print(f"✅ Linewise content with fonts: {linewise_content_with_fonts[:5]}")
+    print(f"✅ Linewise content with fonts: {linewise_content_with_fonts[:5]}")
 
     has_same_font_size = False
     same_font_size = None
@@ -191,12 +214,27 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
 
     # Map YOLO headers with fonts
     yolo_headers_with_fonts = map_yolo_headers_with_fonts(results["blocks"], word_positions)
-    print(f"✅ YOLO Headers with Fonts: {yolo_headers_with_fonts}")
+    print(yolo_headers_with_fonts)
+    # print(f"✅ YOLO Headers with Fonts: {yolo_headers_with_fonts}")
 
     # Filter Headers with Groq 
     # cleaned_headers = filter_headers_with_groq(linewise_content_with_fonts, cleaned_headers_prompt_template)
-    cleaned_headers, prompt_tokens, completion_tokens, total_tokens = filter_headers_with_groq(yolo_headers_with_fonts, cleaned_headers_prompt_template_v3)
-    print(f"✅ Cleaned Headers: {cleaned_headers}")
+    # cleaned_headers, prompt_tokens, completion_tokens, total_tokens = filter_headers_with_groq(yolo_headers_with_fonts, cleaned_headers_prompt_template_v3)
+    # print(f"✅ Cleaned Headers: {cleaned_headers}")
+
+    # if file_name in PROCESSED_HEADERS_CACHE:
+    #     cleaned_headers = PROCESSED_HEADERS_CACHE[file_name]
+    #     prompt_tokens, completion_tokens, total_tokens = 0, 0, 0
+    #     print(f"⚡ Skipping Groq — loaded cleaned_headers from cache for {file_name}")
+    # else:
+    #     cleaned_headers, prompt_tokens, completion_tokens, total_tokens = filter_headers_with_groq(
+    #         yolo_headers_with_fonts, cleaned_headers_prompt_template_v3
+    #     )
+    #     print(f"✅ Cleaned Headers (Groq): {cleaned_headers}")
+    cleaned_headers, prompt_tokens, completion_tokens, total_tokens = filter_headers_with_groq(
+        yolo_headers_with_fonts, cleaned_headers_prompt_template_v3
+    )
+    print(f"✅ Cleaned Headers (Groq): {cleaned_headers}")
 
     if isinstance(cleaned_headers, str):
         import ast
@@ -309,28 +347,28 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
         HEADER_AUTOMATON
     )
 
-    print("\n✅ Matched Headers From Groq Input:")
-    print(matched_headers_from_groq_input)
+    # print("\n✅ Matched Headers From Groq Input:")
+    # print(matched_headers_from_groq_input)
 
-    # -----------------------------------
-    # Debug prints
-    # -----------------------------------
-    print(f"\n📄 Max font size headers: \n{max_font_size_headers}")
-    print(f"\n🔃 Different font size headers: \n{different_font_size_headers}")
+    # # -----------------------------------
+    # # Debug prints
+    # # -----------------------------------
+    # print(f"\n📄 Max font size headers: \n{max_font_size_headers}")
+    # print(f"\n🔃 Different font size headers: \n{different_font_size_headers}")
 
-    print("\n✅ Max Recurring Font Size (from cleaned headers):")
-    print(max_recurring_font_size)
+    # print("\n✅ Max Recurring Font Size (from cleaned headers):")
+    # print(max_recurring_font_size)
 
-    print("\n❌ Same Font Headers Missing From Cleaned Headers:")
-    print(max_font_missing_headers)
+    # print("\n❌ Same Font Headers Missing From Cleaned Headers:")
+    # print(max_font_missing_headers)
 
-    print("\n⚠️ Cleaned Headers Having Different Font Size:")
-    print(different_font_cleaned_headers)
+    # print("\n⚠️ Cleaned Headers Having Different Font Size:")
+    # print(different_font_cleaned_headers)
     # =============================================================================================================
 
 
     # time.sleep(5)
-    # print("⏳ Getting Standard Headings Map...")
+    print("⏳ Getting Standard Headings Map...")
     # Get Standard Headings Map from Groq
     # standard_headings_map = get_standard_headings_map(cleaned_headers, standard_headings_prompt)
     # print(f"✅ Standard Headings Map: {standard_headings_map}")
@@ -339,13 +377,13 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
     # print(f"✅ Standard Headings Map Groq: {standard_headings_map_groq}")
     
     # Get Standard headings Map from Valhalla DistilBART
-    # valhalla_standard_headers = build_map_with_model(cleaned_headers, distilbart_classifier, MODEL_THRESHOLD)
+    valhalla_standard_headers = build_map_with_model(cleaned_headers, distilbart_classifier, MODEL_THRESHOLD)
 
-    # print(f"\n ✅ Valhalla Standard Headings Map: {valhalla_standard_headers}")
+    print(f"\n ✅ Valhalla Standard Headings Map: {valhalla_standard_headers}")
 
-    # standard_headings_map = flatten_meta_map(valhalla_standard_headers)
+    standard_headings_map = flatten_meta_map(valhalla_standard_headers)
 
-    # print(f"✅ Standard Headings Map: {standard_headings_map}")
+    print(f"✅ Standard Headings Map: {standard_headings_map}")
 
     # Section Building
 
@@ -362,6 +400,8 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
     is_multi_column = detect_columns_advanced(pdf_path, max_pages=5).is_multicolumn
     print("🔍 Is Multi Column: ", is_multi_column)
 
+    # is_multi_column = True
+
     # build sections
     builder = SectionBuilder(cleaned_headers)
     sections = builder.build(results["blocks"], is_multi_column)
@@ -370,59 +410,65 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
 
     clean_file_name = file_name.removesuffix(".pdf")
 
-    with open(f"{SECTIONS_DIR}/{clean_file_name}.json", "w") as f:
-        json.dump(sections, f, indent=4)
-    # with open(SECTIONS_OUTPUT_FILE_PATH, "w") as f:
+    # with open(f"{SECTIONS_DIR}/{clean_file_name}.json", "w") as f:
     #     json.dump(sections, f, indent=4)
+    with open(SECTIONS_OUTPUT_FILE_PATH, "w") as f:
+        json.dump(sections, f, indent=4)
 
-    print(f"💾 Section building complete. Sections saved to {SECTIONS_OUTPUT_FILE_PATH}")
-    print(f"📦 Sections: {list(sections.keys())}")
+    # print(f"💾 Section building complete. Sections saved to {SECTIONS_OUTPUT_FILE_PATH}")
+    # print(f"📦 Sections: {list(sections.keys())}")
 
-    # standard_sections = map_content_to_standard_header(sections, standard_headings_map)
+    standard_sections = map_content_to_standard_header(sections, standard_headings_map)
 
-    # # with open(STANDARD_SECTIONS_OUTPUT_FILE_PATH, "w") as f:
-    # #     json.dump(standard_sections, f, indent=4)
+    with open(STANDARD_SECTIONS_OUTPUT_FILE_PATH, "w") as f:
+        json.dump(standard_sections, f, indent=4)
 
-    # # experience_and_projects_content = standard_sections.get("Experience", "") + " " + standard_sections.get("Projects", "")
-    # # print(f"✅ Experience and Projects Content: {experience_and_projects_content}")
+    # experience_and_projects_content = standard_sections.get("Experience", "") + " " + standard_sections.get("Projects", "")
+    # print(f"✅ Experience and Projects Content: {experience_and_projects_content}")
 
-    # # ✅ Extract Experience + Projects using .get("text") and .get("bullets")
-    # exp_data = standard_sections.get("Experience", {})
-    # # print(f"✅ Experience: {exp_data}")
-    # proj_data = standard_sections.get("Projects", {})
-    # # print(f"✅ Projects: {proj_data}")
+    # ✅ Extract Experience + Projects using .get("text") and .get("bullets")
+    exp_data = standard_sections.get("Work Experience", {}) or standard_sections.get("Professional Experience", {}) or standard_sections.get("Work History", {})
+    # print(f"✅ Experience: {exp_data}")
+    proj_data = standard_sections.get("Projects", {}) or standard_sections.get("Project", {})
+    # print(f"✅ Projects: {proj_data}")
 
-    # experience_and_projects_content = (
-    #     exp_data.get("text", "") + " " + proj_data.get("text", "")
-    # ).strip()
+    experience_and_projects_content = (
+        exp_data.get("text", "") + " " + proj_data.get("text", "")
+    ).strip()
 
-    # # combined_list = exp_data.get("bullets", []) + proj_data.get("bullets", [])
+    combined_list = exp_data.get("bullets", []) + proj_data.get("bullets", [])
 
-    # # bullet_analysis = save_useless_bullets(combined_list)
+    # bullet_analysis = save_useless_bullets(combined_list)
 
-    # # print("Useless Bullets:", bullet_analysis["useless_bullets"])
-    # # print("Total Useless:", bullet_analysis["total_useless"])
+    # print("Useless Bullets:", bullet_analysis["useless_bullets"])
+    # print("Total Useless:", bullet_analysis["total_useless"])
 
-    # # first_words = extract_first_words(combined_list)
-    # # print(f"🚀 First words extracted from bullets: \n{first_words}")
-    # # # print(first_words)
+    # first_words = extract_first_words(combined_list)
+    # print(f"🚀 First words extracted from bullets: \n{first_words}")
+    # # print(first_words)
 
-    # # action_words_result = analyze_first_words(first_words)
-    # # print(f"\n📃 Action Words Analysis Result: \n{action_words_result}")
-    # # print(action_words_result)
+    # action_words_result = analyze_first_words(first_words)
+    # print(f"\n📃 Action Words Analysis Result: \n{action_words_result}")
+    # print(action_words_result)
 
-    # # # ✅ Save to files
-    # # with open("experience_projects_text.txt", "w") as f:
-    # #     f.write(experience_and_projects_content)
+    # # ✅ Save to files
+    # with open("experience_projects_text.txt", "w") as f:
+    #     f.write(experience_and_projects_content)
 
-    # # with open("experience_projects_bullets.txt", "w") as f:
-    # #     for index, bullet in enumerate(combined_list):
-    # #         f.write(f"[{index + 1}] {bullet}\n")
+    # with open("experience_projects_bullets.txt", "w") as f:
+    #     for index, bullet in enumerate(combined_list):
+    #         f.write(f"[{index + 1}] {bullet}\n")
 
-    # # INFORMATION MENU METRICS
-    # # action_words, total_action_words, all_action_words = get_action_words(resume_text) # full resume text
+    resume_text = extract_full_text(pdf_bytes)
+    print(f"✅ Extracted Resume Text (first 50 chars): {resume_text[:50]}")
+
+    # INFORMATION MENU METRICS
+    action_words_old, total_action_words, all_action_words = get_action_words(resume_text) # full resume text
     # print(f"\n📄 Experience and Projects Content: \n{experience_and_projects_content}")
-    # action_words, total_action_words, all_action_words = get_action_words(experience_and_projects_content) # experience and projects content only
+    action_words_new, total_action_words, all_action_words = get_action_words(experience_and_projects_content) # experience and projects content only
+
+    print(f"📄 Action Words Old: \n{action_words_old}")
+    print(f"📄 Action Words New: \n{action_words_new}")
 
     # print("Action Words:", action_words)
     # print("Total Action Words:", total_action_words)
@@ -433,8 +479,8 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
     # print("Total Frequent Action Words:", total_frequent_action_words)
     # print("Repeated Frequency of Action Words:", repeated_frequency)
 
-    # # negative_action_words, total_negative_action_words, all_negative_action_words = get_negative_action_words(resume_text) # full resume text
-    # negative_action_words, total_negative_action_words, all_negative_action_words = get_negative_action_words(experience_and_projects_content) # experience and projects content only
+    negative_action_words_old, total_negative_action_words, all_negative_action_words = get_negative_action_words(resume_text) # full resume text
+    negative_action_words_new, total_negative_action_words, all_negative_action_words = get_negative_action_words(experience_and_projects_content) # experience and projects content only
     # print("Negative Action Words:", negative_action_words)
     # print("Total Negative Action Words:", total_negative_action_words)
     # print("All Negative Action Words:", all_negative_action_words)
@@ -444,10 +490,14 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
     # print("Total Negative Action Words:", total_repeated_actionwords_negative)
     # print("Repeated Frequency of Negative Action Words:", repeated_frequency_negative)
 
-    # filler_words, total_filler_words, all_filler_words = get_filler_words(experience_and_projects_content)
-    # print("Filler Words:", filler_words)
-    # print("Total Filler Words:", total_filler_words)
-    # print("All Filler Words:", all_filler_words)
+    filler_words_new, total_filler_words, all_filler_words = get_filler_words(experience_and_projects_content)
+    print("Filler Words:", filler_words_new)
+    print("Total Filler Words:", total_filler_words)
+    print("All Filler Words:", all_filler_words)
+    filler_words_old, total_filler_words, all_filler_words = get_filler_words(resume_text)
+    print("Filler Words:", filler_words_old)
+    print("Total Filler Words:", total_filler_words)
+    print("All Filler Words:", all_filler_words)
 
     # voice = text_voice(experience_and_projects_content)
     # print("Passive Voice Constructions:", voice)
@@ -461,48 +511,46 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
     # print("Font Sizes:", font_sizes)
     # print("Multiple Font Sizes:", multiple_font_size)
 
-    # resume_text = extract_full_text(pdf_bytes)
-    # print(f"✅ Extracted Resume Text (first 50 chars): {resume_text[:50]}")
 
-    # # PERSONAL DETAILS MENU METRICS
-    # phones, phones1, phones2, all_phones = get_phones(resume_text)
-    # print("Phone Numbers (E164 format):", phones)
-    # print("Phone Numbers (Regex 1):", phones1)
-    # print("Phone Numbers (Regex 2):", phones2)
-    # print("All Phone Numbers:", all_phones)
+    # PERSONAL DETAILS MENU METRICS
+    phones, phones1, phones2, all_phones = get_phones(resume_text)
+    print("Phone Numbers (E164 format):", phones)
+    print("Phone Numbers (Regex 1):", phones1)
+    print("Phone Numbers (Regex 2):", phones2)
+    print("All Phone Numbers:", all_phones)
 
-    # reg_Phone = get_Phones(resume_text)
-    # print("Phone Numbers (Regex 3):", reg_Phone)
+    reg_Phone = get_Phones(resume_text)
+    print("Phone Numbers (Regex 3):", reg_Phone)
 
-    # email_finderSet =  get_emails(resume_text) 
-    # print("Email Addresses:", email_finderSet)
+    email_finderSet =  get_emails(resume_text) 
+    print("Email Addresses:", email_finderSet)
 
-    # url,linkedIn_flag,url_flag =  get_url(pdf_bytes)
-    # print("URLs:", url)
-    # print("LinkedIn Flag:", linkedIn_flag)
-    # print("URL Flag:", url_flag)
+    url,linkedIn_flag,url_flag =  get_url(pdf_bytes)
+    print("URLs:", url)
+    print("LinkedIn Flag:", linkedIn_flag)
+    print("URL Flag:", url_flag)
 
-    # images = check_Images(pdf_bytes)
-    # print("Images Found:", images)
+    images = check_Images(pdf_bytes)
+    print("Images Found:", images)
 
     # # COMPETENCIES MENU METRICS
 
-    # finalBullet,Bullets_Total,standard_bullet_flag= get_bullets(resume_text)
-    # print("Bullets Found:", finalBullet)
-    # print("Total Bullets:", Bullets_Total)
-    # print("Standard Bullet Flag:", standard_bullet_flag)
+    finalBullet,Bullets_Total,standard_bullet_flag= get_bullets(resume_text)
+    print("Bullets Found:", finalBullet)
+    print("Total Bullets:", Bullets_Total)
+    print("Standard Bullet Flag:", standard_bullet_flag)
 
-    # ats_date =  getATS_dates(resume_text)
-    # print("ATS Dates Found:", ats_date)
-    # dates_nonAts =  get_nonATSdates(resume_text)
-    # print("Non ATS Dates Found:", dates_nonAts)
-    # dates = ats_date + dates_nonAts
+    ats_date =  getATS_dates(resume_text)
+    print("ATS Dates Found:", ats_date)
+    dates_nonAts =  get_nonATSdates(resume_text)
+    print("Non ATS Dates Found:", dates_nonAts)
+    dates = ats_date + dates_nonAts
 
-    # # measurable= get_namedEntityMeasurable(resume_text) # full resume text
-    # measurable = get_namedEntityMeasurable(experience_and_projects_content) # experience and projects content only
-    # print("Measurable Named Entities:", measurable)
-    # # clean_measurable =  get_measurableUpdated(resume_text,finalBullet,measurable,all_phones,dates) # full resume text
-    # clean_measurable = get_measurableUpdated(experience_and_projects_content,finalBullet,measurable,all_phones,dates) # experience and projects content only
+    # measurable= get_namedEntityMeasurable(resume_text) # full resume text
+    measurable = get_namedEntityMeasurable(experience_and_projects_content) # experience and projects content only
+    print("Measurable Named Entities:", measurable)
+    clean_measurable_old =  get_measurableUpdated(resume_text,finalBullet,measurable,all_phones,dates) # full resume text
+    clean_measurable_new = get_measurableUpdated(experience_and_projects_content,finalBullet,measurable,all_phones,dates) # experience and projects content only
     # print("Clean Measurable Strings:", clean_measurable)
 
     # skills,Skills_Total =  extract_skills(resume_text)
@@ -557,20 +605,21 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
 
     # # REPEATED WORDS
 
-    # extra_words = ['\uf0d8','\uf0b7',':','/','|']
-    # combined_data = ats_date + dates_nonAts + all_phones + finalBullet + list(email_finderSet) + extra_words
-    # combined_data = [word for sublist in combined_data for word in sublist.split()]
-    # raw_data2 = get_bold(pdf_bytes)
-    # repeated_words = frequent_dynamic_ngrams(raw_data2,combined_data)
-    # print("Repeated Words (after removing combined data):\n", repeated_words) 
+    extra_words = ['\uf0d8','\uf0b7',':','/','|']
+    combined_data = ats_date + dates_nonAts + all_phones + finalBullet + list(email_finderSet) + extra_words
+    combined_data = [word for sublist in combined_data for word in sublist.split()]
+    raw_data2 = get_bold(pdf_bytes)
+    repeated_words = frequent_dynamic_ngrams(raw_data2,combined_data)
+    print("Repeated Words (after removing combined data):\n", repeated_words) 
 
     # # new ngrams function
     # words = raw_data2.split()
     # # cleaned_words = [w for w in words if w not in combined_data]
 
-    # # result = better_frequent_ngrams(raw_data2, combined_data, min_n=4, max_n=20)
+    repeated_words_new = better_frequent_ngrams(experience_and_projects_content, combined_data, min_n=4, max_n=20)
+    # result = better_frequent_ngrams(raw_data2, combined_data, min_n=4, max_n=20)
 
-    # # print("\n✅ Counter-based Frequent n-grams Result:\n", result)
+    print("\n✅ Counter-based Frequent n-grams Result:\n", repeated_words_new)
 
 
     # filtered_text, filtered_bullets = get_mapped_section_text(
@@ -654,7 +703,7 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
         "same_font_size": same_font_size,
         "cleaned_headers": cleaned_headers,
         # "standard_headings_map_groq": standard_headings_map_groq,
-        # "standard_headings_map": standard_headings_map,
+        "standard_headings_map": standard_headings_map,
         # "sh_map_scores": valhalla_standard_headers,
         # "sections": sections,
         # "standard_sections": standard_sections,
@@ -674,18 +723,23 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
         "completion_tokens": completion_tokens,
         "total_tokens": total_tokens,
         # "action_words": action_words,
+        # "action_words_old": action_words_old,
+        # "action_words_new": action_words_new,
         # "total_action_words": total_action_words,
         # "all_action_words": all_action_words,
         # "frequent_action_words": frequency_list,
         # "total_frequent_action_words": total_frequent_action_words,
         # "repeated_frequency": repeated_frequency,
         # "negative_action_words": negative_action_words,
+        # "negative_action_words_new": negative_action_words_new,
+        # "negative_action_words_old": negative_action_words_old,
         # "total_negative_action_words": total_negative_action_words,
         # "all_negative_action_words": all_negative_action_words,
         # "frequencyList_negative": frequencyList_negative,
         # "total_repeated_actionwords_negative": total_repeated_actionwords_negative,
         # "repeated_frequency_negative": repeated_frequency_negative,
-        # "filler_words": filler_words,
+        "filler_words_old": filler_words_old,
+        "filler_words_new": filler_words_new,
         # "total_filler_words": total_filler_words,
         # "all_filler_words": all_filler_words,
         # "passive_voice_constructions": voice,
@@ -708,7 +762,10 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
         # "dates_nonAts": dates_nonAts,
         # "measurable_ner": measurable,
         # "clean_measurable": clean_measurable,
-        # "repeated_words": repeated_words_new,
+        # "clean_measurable_old": clean_measurable_old,
+        # "clean_measurable_new": clean_measurable_new,
+        "repeated_words_old": repeated_words,
+        "repeated_words_new": repeated_words_new
         # "skills": skills,
         # "Skills_Total": Skills_Total,
         # # "tables": tables,
@@ -808,8 +865,8 @@ def process_resume(pdf_bytes, pdf_path, experience, file_name):
 
 #     return
 
-# START_FROM = 140  # already processed
-START_FROM = 150  # already processed
+START_FROM = 0  # already processed
+# START_FROM = 260  # already processed
 
 def process_multiple_resume():
     analysis_results = []
@@ -818,7 +875,7 @@ def process_multiple_resume():
     pdf_files = [f for f in os.listdir(DATA_DIR) if f.endswith(".pdf")]
     pdf_files.sort()  # IMPORTANT: keep order consistent
 
-    pdf_files = pdf_files[:200]
+    pdf_files = pdf_files[:400]
 
     for idx, file_name in enumerate(pdf_files, start=1):
 
@@ -868,23 +925,23 @@ def process_multiple_resume():
 
 if __name__ == "__main__":
 
-    # # For local testing    
-    # # SINGLE RESUME
-    # file_name = "HariPrasathVR.pdf"
-    # pdf_path = f"{DATA_DIR}/{file_name}"
-    # pdf_bytes = load_local_pdf(pdf_path)
+    # For local testing    
+    # SINGLE RESUME
+    file_name = "Resume (2) (3).pdf"
+    pdf_path = f"{DATA_DIR}/{file_name}"
+    pdf_bytes = load_local_pdf(pdf_path)
     
-    # # For S3 PDF
-    # # pdf_bytes, pdf_file2 = fetch_pdf_from_s3(
-    # #     "https://local-job-match-pro.s3.ap-south-2.amazonaws.com/e9168491d6ec8e5c0fcdaced9072de5b",
-    # #     os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
-    # #     os.getenv("AWS_SECRET_KEY")   #
-    # # )
+    # For S3 PDF
+    # pdf_bytes, pdf_file2 = fetch_pdf_from_s3(
+    #     "https://local-job-match-pro.s3.ap-south-2.amazonaws.com/e9168491d6ec8e5c0fcdaced9072de5b",
+    #     os.getenv("AWS_ACCESS_KEY"),  # "your_aws_access_key"
+    #     os.getenv("AWS_SECRET_KEY")   #
+    # )
     
-    # experience = 3
+    experience = 3
     # file_name = "Ujjwal Tyagi.pdf"
 
-    # output = process_resume(pdf_bytes, pdf_path, experience, file_name)
+    output = process_resume(pdf_bytes, pdf_path, experience, file_name)
 
 
     # BULK RESUME
@@ -898,6 +955,6 @@ if __name__ == "__main__":
 
     # with batching
 
-    start_time = time.time()
-    process_multiple_resume()
-    print(f"📊 Total time taken: {time.time() - start_time:.2f} seconds")
+    # start_time = time.time()
+    # process_multiple_resume()
+    # print(f"📊 Total time taken: {time.time() - start_time:.2f} seconds")

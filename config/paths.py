@@ -4,13 +4,15 @@ import nltk
 MODEL_PATH = "model/doclayout_yolo_doclaynet_imgsz1120_docsynth_pretrain.pt"
 nltk.data.path.append("nltk_data")
 
-DATA_DIR = os.path.join(os.getcwd(), "data")
-JSON_DIR = os.path.join(os.getcwd(), "json")
+IS_LAMBDA = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
+DEFAULT_OUTPUT_DIR = "/tmp" if IS_LAMBDA else os.getcwd()
+
+DATA_DIR = os.path.join(DEFAULT_OUTPUT_DIR, "data")
+JSON_DIR = os.path.join(DEFAULT_OUTPUT_DIR, "json")
 
 for dir_path in [DATA_DIR, JSON_DIR]:
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
-
 
 SECTIONS_OUTPUT_FILE_NAME = "sections_output.json"
 STANDARD_SECTIONS_OUTPUT_FILE_NAME = "standard_sections_output.json"

@@ -54,10 +54,10 @@ class SectionBuilder:
     def build(self, blocks, is_multiple_columns):
         blocks = self._sort_blocks(blocks, is_multiple_columns)
 
-        import json
+        # import json
 
-        with open("yolo_sorted_blocks.json", "w") as f:
-            json.dump(blocks, f, indent=2)
+        # with open("yolo_sorted_blocks.json", "w") as f:
+        #     json.dump(blocks, f, indent=2)
 
         sections = {}
         current_section = None

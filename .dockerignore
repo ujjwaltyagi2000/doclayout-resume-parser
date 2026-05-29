@@ -1,8 +1,27 @@
-.gitignore
-.python-version
-*.pdf
-resuscan-env/
-.env
 __pycache__/
+*.pdf
+# .env
+resuscan-env/
+input_payload.json
+resuscan-env
+headers_text_output/
 json/
 section_header.json
+sections_output.json
+payload/
+offline.py
+old_runner.py
+resuscan-new
+resume_scan_lambda.py
+*.json
+original_score.py
+prompt.py
+counter_test.py
+*.csv
+*.txt
+Check PDFs/
+*.xlsx
+*ipynb
+!requirements.txt
+.venv/
+!input_payload.json

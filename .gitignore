@@ -22,3 +22,5 @@ counter_test.py
 Check PDFs/
 *.xlsx
 *ipynb
+!requirements.txt
+.venv/
