@@ -113,6 +113,12 @@ def process_resume(pdf_bytes, experience, file_name):
     # Filter Headers with Groq 
     # cleaned_headers = filter_headers_with_groq(linewise_content_with_fonts, cleaned_headers_prompt_template)
     cleaned_headers = filter_headers_with_groq(yolo_headers_with_fonts, cleaned_headers_prompt_template_v3)
+    cleaned_headers, prompt_tokens, completion_tokens, total_tokens = (
+        filter_headers_with_groq(
+            yolo_headers_with_fonts,
+            cleaned_headers_prompt_template_v3
+        )
+    )
     print(f"✅ Cleaned Headers: {cleaned_headers}")
 
     time.sleep(5)
